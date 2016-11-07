@@ -119,13 +119,10 @@ fn check_metadata(pkg: &Package, config: &Config) -> CraftResult<()> {
 // check that the package dependencies are safe to deploy.
 fn verify_dependencies(pkg: &Package) -> CraftResult<()> {
     for dep in pkg.dependencies() {
-        if dep.source_id().is_path() {
-            if !dep.specified_req() {
-                bail!("all path dependencies must have a version specified \
-                       when packaging.\ndependency `{}` does not specify \
-                       a version.",
-                      dep.name())
-            }
+        if dep.source_id().is_path() && !dep.specified_req() {
+            bail!("all path dependencies must have a version specified when packaging.\ndependency `{}` does not \
+                   specify a version.",
+                  dep.name())
         }
     }
     Ok(())

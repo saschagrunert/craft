@@ -1,5 +1,4 @@
-use std::env;
-use std::fs;
+use std::{env, fs};
 use std::path::Path;
 use std::collections::BTreeMap;
 
@@ -428,16 +427,14 @@ path = {}
                                                            i.target_name,
                                                            toml::Value::String(i.relative_path.clone())));
             }
-        } else {
-            if i.relative_path != "src/lib.rs" {
-                crafttoml_path_specifier.push_str(&format!(r#"
+        } else if i.relative_path != "src/lib.rs" {
+            crafttoml_path_specifier.push_str(&format!(r#"
 [lib]
 name = "{}"
 path = {}
 "#,
-                                                           i.target_name,
-                                                           toml::Value::String(i.relative_path.clone())));
-            }
+                                                       i.target_name,
+                                                       toml::Value::String(i.relative_path.clone())));
         }
     }
 

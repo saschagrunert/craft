@@ -156,10 +156,8 @@ pub fn install(root: Option<&str>,
     for &(bin, src) in binaries.iter() {
         let dst = staging_dir.path().join(bin);
         // Try to move if `target_dir` is transient.
-        if !source_id.is_path() {
-            if fs::rename(src, &dst).is_ok() {
-                continue;
-            }
+        if !source_id.is_path() && fs::rename(src, &dst).is_ok() {
+            continue;
         }
         try!(fs::copy(src, &dst)
             .chain_error(|| human(format!("failed to copy `{}` to `{}`", src.display(), dst.display()))));
