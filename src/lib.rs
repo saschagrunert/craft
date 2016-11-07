@@ -6,8 +6,10 @@
 
 #[cfg(test)]
 extern crate hamcrest;
+
 #[macro_use]
 extern crate log;
+
 extern crate crossbeam;
 extern crate curl;
 extern crate docopt;
