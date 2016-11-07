@@ -3,7 +3,7 @@ use std::fs;
 use std::path::Path;
 
 use core::{Profiles, Workspace};
-use core::registry::PackageRegistry;
+use registry::PackageRegistry;
 use util::{CraftResult, human, ChainError, Config};
 use ops::{self, Context, BuildConfig, Kind, Unit};
 

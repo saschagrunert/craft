@@ -1,8 +1,7 @@
-use std::fmt;
+use std::{io, fmt};
 use std::io::prelude::*;
-use std::io;
 
-use term::color::{Color, BLACK, RED, GREEN, YELLOW};
+use term::color::{Color, BLACK, BRIGHT_RED, BRIGHT_GREEN, BRIGHT_YELLOW};
 use term::{self, Terminal, TerminfoTerminal, color, Attr};
 
 use self::AdequateTerminal::{NoColor, Colored};
@@ -88,7 +87,7 @@ impl MultiShell {
     {
         match self.verbosity {
             Quiet => Ok(()),
-            _ => self.err().say_status(status, message, GREEN, true),
+            _ => self.err().say_status(format!("[{}]", status), message, BRIGHT_GREEN),
         }
     }
 
@@ -111,13 +110,13 @@ impl MultiShell {
     }
 
     pub fn error<T: fmt::Display>(&mut self, message: T) -> CraftResult<()> {
-        self.err().say_status("error:", message, RED, false)
+        self.err().say_status("[ERR!]", message, BRIGHT_RED)
     }
 
     pub fn warn<T: fmt::Display>(&mut self, message: T) -> CraftResult<()> {
         match self.verbosity {
             Quiet => Ok(()),
-            _ => self.err().say_status("warning:", message, YELLOW, false),
+            _ => self.err().say_status("[WARN]", message, BRIGHT_YELLOW),
         }
     }
 
@@ -134,8 +133,7 @@ impl MultiShell {
             None => Auto,
 
             Some(arg) => {
-                bail!("argument for --color must be auto, always, or \
-                                never, but found `{}`",
+                bail!("argument for --color must be auto, always, or never, but found `{}`",
                       arg)
             }
         };
@@ -218,13 +216,13 @@ impl Shell {
         if color != BLACK {
             try!(self.fg(color));
         }
-        try!(write!(self, "{}\n", message.to_string()));
+        try!(writeln!(self, "{}", message.to_string()));
         try!(self.reset());
         try!(self.flush());
         Ok(())
     }
 
-    pub fn say_status<T, U>(&mut self, status: T, message: U, color: Color, justified: bool) -> CraftResult<()>
+    pub fn say_status<T, U>(&mut self, status: T, message: U, color: Color) -> CraftResult<()>
         where T: fmt::Display,
               U: fmt::Display
     {
@@ -235,13 +233,9 @@ impl Shell {
         if self.supports_attr(Attr::Bold) {
             try!(self.attr(Attr::Bold));
         }
-        if justified {
-            try!(write!(self, "{:>12}", status.to_string()));
-        } else {
-            try!(write!(self, "{}", status));
-        }
+        try!(write!(self, "{}", status));
         try!(self.reset());
-        try!(write!(self, " {}\n", message));
+        try!(writeln!(self, " {}", message));
         try!(self.flush());
         Ok(())
     }

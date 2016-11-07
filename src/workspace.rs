@@ -11,39 +11,36 @@ use util::paths;
 
 /// The core abstraction in Craft for working with a workspace of crates.
 ///
-/// A workspace is often created very early on and then threaded through all
-/// other functions. It's typically through this object that the current
-/// package is loaded and/or learned about.
+/// A workspace is often created very early on and then threaded through all other functions. It's
+/// typically through this object that the current package is loaded and/or learned about.
 pub struct Workspace<'cfg> {
     config: &'cfg Config,
 
-    // This path is a path to where the current craft subcommand was invoked
-    // from. That is, this is the `--manifest-path` argument to Craft, and
-    // points to the "main crate" that we're going to worry about.
+    // This path is a path to where the current craft subcommand was invoked from. That is, this is
+    // the `--manifest-path` argument to Craft, and points to the "main crate" that we're going to
+    // worry about.
     current_manifest: PathBuf,
 
-    // A list of packages found in this workspace. Always includes at least the
-    // package mentioned by `current_manifest`.
+    // A list of packages found in this workspace. Always includes at least the package mentioned
+    // by `current_manifest`.
     packages: Packages<'cfg>,
 
-    // If this workspace includes more than one crate, this points to the root
-    // of the workspace. This is `None` in the case that `[workspace]` is
-    // missing, `package.workspace` is missing, and no `Craft.toml` above
-    // `current_manifest` was found on the filesystem with `[workspace]`.
+    // If this workspace includes more than one crate, this points to the root of the workspace.
+    // This is `None` in the case that `[workspace]` is missing, `package.workspace` is missing,
+    // and no `Craft.toml` above `current_manifest` was found on the filesystem with `[workspace]`.
     root_manifest: Option<PathBuf>,
 
-    // Shared target directory for all the packages of this workspace.
-    // `None` if the default path of `root/target` should be used.
+    // Shared target directory for all the packages of this workspace.  `None` if the default path
+    // of `root/target` should be used.
     target_dir: Option<Filesystem>,
 
-    // List of members in this workspace with a listing of all their manifest
-    // paths. The packages themselves can be looked up through the `packages`
-    // set above.
+    // List of members in this workspace with a listing of all their manifest paths. The packages
+    // themselves can be looked up through the `packages` set above.
     members: Vec<PathBuf>,
 }
 
-// Separate structure for tracking loaded packages (to avoid loading anything
-// twice), and this is separate to help appease the borrow checker.
+// Separate structure for tracking loaded packages (to avoid loading anything twice), and this is
+// separate to help appease the borrow checker.
 struct Packages<'cfg> {
     config: &'cfg Config,
     packages: HashMap<PathBuf, MaybePackage>,
@@ -66,20 +63,18 @@ pub enum WorkspaceConfig {
     Member { root: Option<String> },
 }
 
-/// An iterator over the member packages of a workspace, returned by
-/// `Workspace::members`
+/// An iterator over the member packages of a workspace, returned by `Workspace::members`
 pub struct Members<'a, 'cfg: 'a> {
     ws: &'a Workspace<'cfg>,
     iter: slice::Iter<'a, PathBuf>,
 }
 
 impl<'cfg> Workspace<'cfg> {
-    /// Creates a new workspace given the target manifest pointed to by
-    /// `manifest_path`.
+    /// Creates a new workspace given the target manifest pointed to by `manifest_path`.
     ///
-    /// This function will construct the entire workspace by determining the
-    /// root and all member packages. It will then validate the workspace
-    /// before returning it, so `Ok` is only returned for valid workspaces.
+    /// This function will construct the entire workspace by determining the root and all member
+    /// packages. It will then validate the workspace before returning it, so `Ok` is only returned
+    /// for valid workspaces.
     pub fn new(manifest_path: &Path, config: &'cfg Config) -> CraftResult<Workspace<'cfg>> {
         let target_dir = try!(config.target_dir());
 
@@ -100,15 +95,12 @@ impl<'cfg> Workspace<'cfg> {
         Ok(ws)
     }
 
-    /// Creates a "temporary workspace" from one package which only contains
-    /// that package.
+    /// Creates a "temporary workspace" from one package which only contains that package.
     ///
-    /// This constructor will not touch the filesystem and only creates an
-    /// in-memory workspace. That is, all configuration is ignored, it's just
-    /// intended for that one package.
+    /// This constructor will not touch the filesystem and only creates an in-memory workspace.
+    /// That is, all configuration is ignored, it's just intended for that one package.
     ///
-    /// This is currently only used in niche situations like `craft install` or
-    /// `craft package`.
+    /// This is currently only used in niche situations like `craft install` or `craft package`.
     pub fn one(package: Package, config: &'cfg Config, target_dir: Option<Filesystem>) -> CraftResult<Workspace<'cfg>> {
         let mut ws = Workspace {
             config: config,
@@ -137,9 +129,9 @@ impl<'cfg> Workspace<'cfg> {
 
     /// Returns the current package of this workspace.
     ///
-    /// Note that this can return an error if it the current manifest is
-    /// actually a "virtual Craft.toml", in which case an error is returned
-    /// indicating that something else should be passed.
+    /// Note that this can return an error if it the current manifest is actually a "virtual
+    /// Craft.toml", in which case an error is returned indicating that something else should be
+    /// passed.
     pub fn current(&self) -> CraftResult<&Package> {
         self.current_opt().ok_or_else(|| {
             human(format!("manifest path `{}` is a virtual manifest, but this \
@@ -171,8 +163,8 @@ impl<'cfg> Workspace<'cfg> {
 
     /// Returns the root path of this workspace.
     ///
-    /// That is, this returns the path of the directory containing the
-    /// `Craft.toml` which is the root of this workspace.
+    /// That is, this returns the path of the directory containing the `Craft.toml` which is the
+    /// root of this workspace.
     pub fn root(&self) -> &Path {
         match self.root_manifest {
                 Some(ref p) => p,
@@ -208,15 +200,13 @@ impl<'cfg> Workspace<'cfg> {
         }
     }
 
-    /// Finds the root of a workspace for the crate whose manifest is located
-    /// at `manifest_path`.
+    /// Finds the root of a workspace for the crate whose manifest is located at `manifest_path`.
     ///
-    /// This will parse the `Craft.toml` at `manifest_path` and then interpret
-    /// the workspace configuration, optionally walking up the filesystem
-    /// looking for other workspace roots.
+    /// This will parse the `Craft.toml` at `manifest_path` and then interpret the workspace
+    /// configuration, optionally walking up the filesystem looking for other workspace roots.
     ///
-    /// Returns an error if `manifest_path` isn't actually a valid manifest or
-    /// if some other transient error happens.
+    /// Returns an error if `manifest_path` isn't actually a valid manifest or if some other
+    /// transient error happens.
     fn find_root(&mut self, manifest_path: &Path) -> CraftResult<Option<PathBuf>> {
         {
             let current = try!(self.packages.load(&manifest_path));
@@ -256,13 +246,11 @@ impl<'cfg> Workspace<'cfg> {
         Ok(None)
     }
 
-    /// After the root of a workspace has been located, probes for all members
-    /// of a workspace.
+    /// After the root of a workspace has been located, probes for all members of a workspace.
     ///
-    /// If the `workspace.members` configuration is present, then this just
-    /// verifies that those are all valid packages to point to. Otherwise, this
-    /// will transitively follow all `path` dependencies looking for members of
-    /// the workspace.
+    /// If the `workspace.members` configuration is present, then this just verifies that those are
+    /// all valid packages to point to. Otherwise, this will transitively follow all `path`
+    /// dependencies looking for members of the workspace.
     fn find_members(&mut self) -> CraftResult<()> {
         let root_manifest = match self.root_manifest {
             Some(ref path) => path.clone(),

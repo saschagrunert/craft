@@ -107,9 +107,11 @@ impl PackageIdSpec {
     pub fn name(&self) -> &str {
         &self.name
     }
+
     pub fn version(&self) -> Option<&Version> {
         self.version.as_ref()
     }
+
     pub fn url(&self) -> Option<&Url> {
         self.url.as_ref()
     }
@@ -204,93 +206,5 @@ impl fmt::Display for PackageIdSpec {
             None => {}
         }
         Ok(())
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use core::{PackageId, SourceId};
-    use super::PackageIdSpec;
-    use url::Url;
-    use semver::Version;
-
-    #[test]
-    fn good_parsing() {
-        fn ok(spec: &str, expected: PackageIdSpec) {
-            let parsed = PackageIdSpec::parse(spec).unwrap();
-            assert_eq!(parsed, expected);
-            assert_eq!(parsed.to_string(), spec);
-        }
-
-        ok("http://crates.io/foo#1.2.3",
-           PackageIdSpec {
-               name: "foo".to_string(),
-               version: Some(Version::parse("1.2.3").unwrap()),
-               url: Some(Url::parse("http://crates.io/foo").unwrap()),
-           });
-        ok("http://crates.io/foo#bar:1.2.3",
-           PackageIdSpec {
-               name: "bar".to_string(),
-               version: Some(Version::parse("1.2.3").unwrap()),
-               url: Some(Url::parse("http://crates.io/foo").unwrap()),
-           });
-        ok("crates.io/foo",
-           PackageIdSpec {
-               name: "foo".to_string(),
-               version: None,
-               url: Some(Url::parse("craft://crates.io/foo").unwrap()),
-           });
-        ok("crates.io/foo#1.2.3",
-           PackageIdSpec {
-               name: "foo".to_string(),
-               version: Some(Version::parse("1.2.3").unwrap()),
-               url: Some(Url::parse("craft://crates.io/foo").unwrap()),
-           });
-        ok("crates.io/foo#bar",
-           PackageIdSpec {
-               name: "bar".to_string(),
-               version: None,
-               url: Some(Url::parse("craft://crates.io/foo").unwrap()),
-           });
-        ok("crates.io/foo#bar:1.2.3",
-           PackageIdSpec {
-               name: "bar".to_string(),
-               version: Some(Version::parse("1.2.3").unwrap()),
-               url: Some(Url::parse("craft://crates.io/foo").unwrap()),
-           });
-        ok("foo",
-           PackageIdSpec {
-               name: "foo".to_string(),
-               version: None,
-               url: None,
-           });
-        ok("foo:1.2.3",
-           PackageIdSpec {
-               name: "foo".to_string(),
-               version: Some(Version::parse("1.2.3").unwrap()),
-               url: None,
-           });
-    }
-
-    #[test]
-    fn bad_parsing() {
-        assert!(PackageIdSpec::parse("baz:").is_err());
-        assert!(PackageIdSpec::parse("baz:*").is_err());
-        assert!(PackageIdSpec::parse("baz:1.0").is_err());
-        assert!(PackageIdSpec::parse("http://baz:1.0").is_err());
-        assert!(PackageIdSpec::parse("http://#baz:1.0").is_err());
-    }
-
-    #[test]
-    fn matching() {
-        let url = Url::parse("http://example.com").unwrap();
-        let sid = SourceId::for_registry(&url);
-        let foo = PackageId::new("foo", "1.2.3", &sid).unwrap();
-        let bar = PackageId::new("bar", "1.2.3", &sid).unwrap();
-
-        assert!(PackageIdSpec::parse("foo").unwrap().matches(&foo));
-        assert!(!PackageIdSpec::parse("foo").unwrap().matches(&bar));
-        assert!(PackageIdSpec::parse("foo:1.2.3").unwrap().matches(&foo));
-        assert!(!PackageIdSpec::parse("foo:1.2.2").unwrap().matches(&foo));
     }
 }

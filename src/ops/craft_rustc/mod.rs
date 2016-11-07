@@ -6,12 +6,14 @@ use std::path::{self, PathBuf};
 use std::sync::Arc;
 
 use rustc_serialize::json;
+use shell::ColorConfig;
 
-use core::{Package, PackageId, PackageSet, Target, Resolve};
+use core::{Package, PackageId, PackageSet, Target};
 use core::{Profile, Profiles, Workspace};
-use core::shell::ColorConfig;
 use util::{self, CraftResult, ProcessBuilder, human, machine_message};
 use util::{Config, internal, ChainError, profile, join_paths, short_hash};
+
+use resolver::Resolve;
 
 use self::job::{Job, Work};
 use self::job_queue::JobQueue;

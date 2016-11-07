@@ -13,7 +13,7 @@ use std::str::FromStr;
 
 use rustc_serialize::{Encodable, Encoder};
 use toml;
-use core::shell::{Verbosity, ColorConfig};
+use shell::{Verbosity, ColorConfig};
 use core::MultiShell;
 use util::{CraftResult, CraftError, ChainError, Rustc, internal, human};
 use util::{Filesystem, LazyCell};

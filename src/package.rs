@@ -1,25 +1,25 @@
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
-use std::fmt;
-use std::hash;
+use std::{fmt, hash};
 use std::path::{Path, PathBuf};
 
 use semver::Version;
 
 use core::{Dependency, Manifest, PackageId, SourceId, Target, TargetKind};
-use core::{Summary, Metadata, SourceMap};
+use core::{Metadata, SourceMap};
 use ops;
 use util::{CraftResult, Config, LazyCell, ChainError, internal, human, lev_distance};
 use rustc_serialize::{Encoder, Encodable};
 
+use summary::Summary;
+
 /// Information about a package that is available somewhere in the file system.
-///
 /// A package is a `Craft.toml` file plus all the files that are part of it.
-// TODO: Is manifest_path a relic?
 #[derive(Clone, Debug)]
 pub struct Package {
     // The package's manifest
     manifest: Manifest,
+
     // The root of the package
     manifest_path: PathBuf,
 }
@@ -80,33 +80,43 @@ impl Package {
     pub fn dependencies(&self) -> &[Dependency] {
         self.manifest.dependencies()
     }
+
     pub fn manifest(&self) -> &Manifest {
         &self.manifest
     }
+
     pub fn manifest_path(&self) -> &Path {
         &self.manifest_path
     }
+
     pub fn name(&self) -> &str {
         self.package_id().name()
     }
+
     pub fn package_id(&self) -> &PackageId {
         self.manifest.package_id()
     }
+
     pub fn root(&self) -> &Path {
         self.manifest_path.parent().unwrap()
     }
+
     pub fn summary(&self) -> &Summary {
         self.manifest.summary()
     }
+
     pub fn targets(&self) -> &[Target] {
         self.manifest.targets()
     }
+
     pub fn version(&self) -> &Version {
         self.package_id().version()
     }
+
     pub fn authors(&self) -> &Vec<String> {
         &self.manifest.metadata().authors
     }
+
     pub fn publish(&self) -> bool {
         self.manifest.publish()
     }

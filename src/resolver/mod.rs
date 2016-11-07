@@ -53,8 +53,9 @@ use std::rc::Rc;
 
 use semver;
 
-use core::{PackageId, Registry, SourceId, Summary, Dependency};
+use core::{PackageId, Registry, SourceId, Dependency};
 use core::PackageIdSpec;
+use summary::Summary;
 use util::{CraftResult, Graph, human, CraftError};
 use util::profile;
 use util::ChainError;

@@ -13,7 +13,7 @@ use std::{env, fs};
 use std::path::{Path, PathBuf};
 use std::collections::{BTreeSet, HashMap};
 
-use craft::core::shell::Verbosity;
+use craft::shell::Verbosity;
 use craft::execute_main_without_stdin;
 use craft::util::{self, CliResult, lev_distance, Config, human, CraftResult};
 use craft::util::CliError;

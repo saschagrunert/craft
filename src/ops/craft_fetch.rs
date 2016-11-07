@@ -1,7 +1,8 @@
-use core::registry::PackageRegistry;
-use core::{PackageId, Resolve, PackageSet, Workspace};
+use registry::PackageRegistry;
+use core::{PackageId, PackageSet, Workspace};
 use ops;
 use util::CraftResult;
+use resolver::Resolve;
 
 /// Executes `craft fetch`.
 pub fn fetch<'a>(ws: &Workspace<'a>) -> CraftResult<(Resolve, PackageSet<'a>)> {

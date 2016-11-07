@@ -10,7 +10,7 @@ use rustc_serialize::{Encodable, Encoder, Decodable, Decoder};
 use semver;
 
 use util::{CraftResult, CraftError, short_hash, ToSemver};
-use core::source::SourceId;
+use source::SourceId;
 
 /// Identifier for a specific version of a package in a specific source.
 #[derive(Clone)]
@@ -199,24 +199,5 @@ impl fmt::Debug for PackageId {
             .field("version", &self.inner.version.to_string())
             .field("source", &self.inner.source_id.to_string())
             .finish()
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::PackageId;
-    use core::source::SourceId;
-    use sources::CRATES_IO;
-    use util::ToUrl;
-
-    #[test]
-    fn invalid_version_handled_nicely() {
-        let loc = CRATES_IO.to_url().unwrap();
-        let repo = SourceId::for_registry(&loc);
-
-        assert!(PackageId::new("foo", "1.0", &repo).is_err());
-        assert!(PackageId::new("foo", "1", &repo).is_err());
-        assert!(PackageId::new("foo", "bar", &repo).is_err());
-        assert!(PackageId::new("foo", "", &repo).is_err());
     }
 }

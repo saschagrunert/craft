@@ -2,11 +2,12 @@ use std::fmt::{self, Debug, Formatter};
 
 use url::Url;
 
-use core::source::{Source, SourceId};
+use source::{Source, SourceId};
 use core::GitReference;
-use core::{Package, PackageId, Summary, Registry, Dependency};
+use core::{Package, PackageId, Registry, Dependency};
 use util::{CraftResult, Config};
 use util::hex::short_hash;
+use summary::Summary;
 use sources::PathSource;
 use sources::git::utils::{GitRemote, GitRevision};
 

@@ -10,12 +10,13 @@ use semver::{self, VersionReq};
 use rustc_serialize::{Decodable, Decoder};
 
 use core::{SourceId, Profiles, PackageIdSpec, GitReference, WorkspaceConfig};
-use core::{Summary, Manifest, Target, Dependency, DependencyInner, PackageId};
-use core::{EitherManifest, VirtualManifest};
-use core::dependency::{Kind, Platform};
-use core::manifest::{LibKind, Profile, ManifestMetadata};
-use core::package_id::Metadata;
+use core::{Manifest, Target, Dependency, DependencyInner, PackageId};
+
+use dependency::{Kind, Platform};
+use manifest::{EitherManifest, VirtualManifest, LibKind, Profile, ManifestMetadata};
+use package_id::Metadata;
 use sources::CRATES_IO;
+use summary::Summary;
 use util::{self, CraftResult, human, ToUrl, ToSemver, ChainError, Config};
 
 /// Representation of the projects file layout.

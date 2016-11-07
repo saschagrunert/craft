@@ -28,15 +28,13 @@ extern crate term;
 extern crate toml;
 extern crate url;
 
-use std::env;
-use std::io;
-use rustc_serialize::{Decodable, Encodable};
-use rustc_serialize::json;
+use std::{env, io};
+use rustc_serialize::{Decodable, Encodable, json};
 use docopt::Docopt;
 
-use core::{Shell, MultiShell, ShellConfig, Verbosity, ColorConfig};
-use core::shell::Verbosity::Verbose;
-use core::shell::ColorConfig::Auto;
+use shell::{Shell, MultiShell, ShellConfig, Verbosity, ColorConfig};
+use shell::Verbosity::Verbose;
+use shell::ColorConfig::Auto;
 use term::color::BLACK;
 
 pub use util::{CraftError, CraftResult, CliError, CliResult, human, Config, ChainError};
@@ -48,9 +46,20 @@ macro_rules! bail {
 }
 
 pub mod core;
+pub mod dependency;
+pub mod manifest;
 pub mod ops;
+pub mod package;
+pub mod package_id;
+    mod package_id_spec;
+pub mod registry;
+pub mod resolver;
+pub mod shell;
+pub mod source;
 pub mod sources;
+pub mod summary;
 pub mod util;
+    mod workspace;
 
 pub fn execute_main_without_stdin<T, V>(exec: fn(T, &Config) -> CliResult<Option<V>>, options_first: bool, usage: &str)
     where V: Encodable,
@@ -79,11 +88,9 @@ fn process<V, F>(mut callback: F)
     let mut config = None;
     let result = (|| {
         config = Some(try!(Config::default()));
-        let args: Vec<_> = try!(env::args_os().map(|s| {
-            s.into_string().map_err(|s| {
-                human(format!("invalid unicode in argument: {:?}", s))
-            })
-        }).collect());
+        let args: Vec<_> = try!(env::args_os()
+            .map(|s| s.into_string().map_err(|s| human(format!("invalid unicode in argument: {:?}", s))))
+            .collect());
         callback(&args, config.as_ref().unwrap())
     })();
     let mut verbose_shell = shell(Verbose, Auto);
@@ -117,6 +124,7 @@ pub fn shell(verbosity: Verbosity, color_config: ColorConfig) -> MultiShell {
         color_config: color_config,
         tty: tty,
     };
+
     let err = Shell::create(|| Box::new(io::stderr()), config);
 
     let tty = isatty(Output::Stdout);
@@ -125,6 +133,7 @@ pub fn shell(verbosity: Verbosity, color_config: ColorConfig) -> MultiShell {
         color_config: color_config,
         tty: tty,
     };
+
     let out = Shell::create(|| Box::new(io::stdout()), config);
 
     return MultiShell::new(out, err, verbosity);
@@ -138,6 +147,7 @@ pub fn shell(verbosity: Verbosity, color_config: ColorConfig) -> MultiShell {
 
         unsafe { libc::isatty(fd) != 0 }
     }
+
     #[cfg(windows)]
     fn isatty(output: Output) -> bool {
         extern crate kernel32;
@@ -218,14 +228,17 @@ fn handle_cause(mut craft_err: &CraftError, shell: &mut MultiShell) -> bool {
 }
 
 pub fn version() -> String {
-    format!("craft {}", match option_env!("CFG_VERSION") {
-        Some(s) => s.to_string(),
-        None => format!("{}.{}.{}{}",
-                        env!("CARGO_PKG_VERSION_MAJOR"),
-                        env!("CARGO_PKG_VERSION_MINOR"),
-                        env!("CARGO_PKG_VERSION_PATCH"),
-                        option_env!("CARGO_PKG_VERSION_PRE").unwrap_or(""))
-    })
+    format!("craft {}",
+            match option_env!("CFG_VERSION") {
+                Some(s) => s.to_string(),
+                None => {
+                    format!("{}.{}.{}{}",
+                            env!("CARGO_PKG_VERSION_MAJOR"),
+                            env!("CARGO_PKG_VERSION_MINOR"),
+                            env!("CARGO_PKG_VERSION_PATCH"),
+                            option_env!("CARGO_PKG_VERSION_PRE").unwrap_or(""))
+                }
+            })
 }
 
 fn flags_from_args<T>(usage: &str, args: &[String], options_first: bool) -> CliResult<T>

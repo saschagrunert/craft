@@ -5,8 +5,9 @@ use std::path::Path;
 
 use rustc_serialize::json;
 
-use core::dependency::{Dependency, DependencyInner, Kind};
-use core::{SourceId, Summary, PackageId, Registry};
+use dependency::{Dependency, DependencyInner, Kind};
+use core::{SourceId, PackageId, Registry};
+use summary::Summary;
 use sources::registry::{RegistryPackage, RegistryDependency, INDEX_LOCK};
 use util::{CraftResult, ChainError, internal, Filesystem, Config};
 

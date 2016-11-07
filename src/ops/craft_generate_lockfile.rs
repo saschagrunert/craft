@@ -1,9 +1,9 @@
 use std::collections::{BTreeMap, HashSet};
 
 use core::PackageId;
-use core::registry::PackageRegistry;
-use core::{Resolve, SourceId, Workspace};
-use core::resolver::Method;
+use registry::PackageRegistry;
+use core::{SourceId, Workspace};
+use resolver::{Method, Resolve};
 use ops;
 use util::config::Config;
 use util::CraftResult;

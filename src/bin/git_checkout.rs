@@ -1,4 +1,4 @@
-use craft::core::source::{Source, SourceId, GitReference};
+use craft::source::{Source, SourceId, GitReference};
 use craft::sources::git::GitSource;
 use craft::util::{Config, CliResult, ToUrl};
 

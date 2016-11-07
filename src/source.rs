@@ -14,36 +14,31 @@ use sources::{PathSource, GitSource, RegistrySource, CRATES_IO};
 use sources::DirectorySource;
 use util::{human, Config, CraftResult, ToUrl};
 
-/// A Source finds and downloads remote packages based on names and
-/// versions.
+/// A Source finds and downloads remote packages based on names and versions.
 pub trait Source: Registry {
-    /// The update method performs any network operations required to
-    /// get the entire list of all names, versions and dependencies of
-    /// packages managed by the Source.
+    /// The update method performs any network operations required to get the entire list of all
+    /// names, versions and dependencies of packages managed by the Source.
     fn update(&mut self) -> CraftResult<()>;
 
-    /// The download method fetches the full package for each name and
-    /// version specified.
+    /// The download method fetches the full package for each name and version specified.
     fn download(&mut self, package: &PackageId) -> CraftResult<Package>;
 
-    /// Generates a unique string which represents the fingerprint of the
-    /// current state of the source.
+    /// Generates a unique string which represents the fingerprint of the current state of the
+    /// source.
     ///
-    /// This fingerprint is used to determine the "fresheness" of the source
-    /// later on. It must be guaranteed that the fingerprint of a source is
-    /// constant if and only if the output product will remain constant.
+    /// This fingerprint is used to determine the "fresheness" of the source later on. It must be
+    /// guaranteed that the fingerprint of a source is constant if and only if the output product
+    /// will remain constant.
     ///
-    /// The `pkg` argument is the package which this fingerprint should only be
-    /// interested in for when this source may contain multiple packages.
+    /// The `pkg` argument is the package which this fingerprint should only be interested in for
+    /// when this source may contain multiple packages.
     fn fingerprint(&self, pkg: &Package) -> CraftResult<String>;
 
-    /// If this source supports it, verifies the source of the package
-    /// specified.
+    /// If this source supports it, verifies the source of the package specified.
     ///
-    /// Note that the source may also have performed other checksum-based
-    /// verification during the `download` step, but this is intended to be run
-    /// just before a crate is compiled so it may perform more expensive checks
-    /// which may not be cacheable.
+    /// Note that the source may also have performed other checksum-based verification during the
+    /// `download` step, but this is intended to be run just before a crate is compiled so it may
+    /// perform more expensive checks which may not be cacheable.
     fn verify(&self, _pkg: &PackageId) -> CraftResult<()> {
         Ok(())
     }
@@ -71,12 +66,16 @@ impl<'a, T: Source + ?Sized + 'a> Source for Box<T> {
 enum Kind {
     /// Kind::Git(<git reference>) represents a git repository
     Git(GitReference),
+
     /// represents a local path
     Path,
+
     /// represents the central registry
     Registry,
+
     /// represents a local filesystem-based registry
     LocalRegistry,
+
     /// represents a directory-based registry
     Directory,
 }
@@ -208,9 +207,11 @@ impl SourceId {
     pub fn url(&self) -> &Url {
         &self.inner.url
     }
+
     pub fn is_path(&self) -> bool {
         self.inner.kind == Kind::Path
     }
+
     pub fn is_registry(&self) -> bool {
         self.inner.kind == Kind::Registry || self.inner.kind == Kind::LocalRegistry
     }
@@ -331,9 +332,8 @@ impl fmt::Display for SourceId {
     }
 }
 
-// This custom implementation handles situations such as when two git sources
-// point at *almost* the same URL, but not quite, even when they actually point
-// to the same repository.
+// This custom implementation handles situations such as when two git sources point at *almost* the
+// same URL, but not quite, even when they actually point to the same repository.
 impl PartialEq for SourceIdInner {
     fn eq(&self, other: &SourceIdInner) -> bool {
         if self.kind != other.kind {
@@ -375,9 +375,9 @@ impl Ord for SourceIdInner {
     }
 }
 
-// The hash of SourceId is used in the name of some Craft folders, so shouldn't
-// vary. `as_str` gives the serialisation of a url (which has a spec) and so
-// insulates against possible changes in how the url crate does hashing.
+// The hash of SourceId is used in the name of some Craft folders, so shouldn't vary. `as_str`
+// gives the serialisation of a url (which has a spec) and so insulates against possible changes in
+// how the url crate does hashing.
 impl hash::Hash for SourceId {
     fn hash<S: hash::Hasher>(&self, into: &mut S) {
         self.inner.kind.hash(into);
@@ -475,27 +475,5 @@ impl<'a, 'src> Iterator for SourcesMut<'a, 'src> {
     type Item = (&'a SourceId, &'a mut (Source + 'src));
     fn next(&mut self) -> Option<(&'a SourceId, &'a mut (Source + 'src))> {
         self.inner.next().map(|(a, b)| (a, &mut **b))
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use super::{SourceId, Kind, GitReference};
-    use util::ToUrl;
-
-    #[test]
-    fn github_sources_equal() {
-        let loc = "https://github.com/foo/bar".to_url().unwrap();
-        let master = Kind::Git(GitReference::Branch("master".to_string()));
-        let s1 = SourceId::new(master.clone(), loc);
-
-        let loc = "git://github.com/foo/bar".to_url().unwrap();
-        let s2 = SourceId::new(master, loc.clone());
-
-        assert_eq!(s1, s2);
-
-        let foo = Kind::Git(GitReference::Branch("foo".to_string()));
-        let s3 = SourceId::new(foo, loc);
-        assert!(s1 != s3);
     }
 }

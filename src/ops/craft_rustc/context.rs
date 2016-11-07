@@ -5,10 +5,11 @@ use std::str::{self, FromStr};
 use std::sync::Arc;
 
 
-use core::{Package, PackageId, PackageSet, Resolve, Target, Profile};
+use core::{Package, PackageId, PackageSet, Target, Profile};
 use core::{TargetKind, Profiles, Metadata, Dependency, Workspace};
-use core::dependency::Kind as DepKind;
+use dependency::Kind as DepKind;
 use util::{CraftResult, ChainError, internal, Config, profile, Cfg, human};
+use resolver::Resolve;
 
 use super::TargetConfig;
 use super::custom_build::{BuildState, BuildScripts};

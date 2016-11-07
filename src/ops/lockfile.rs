@@ -3,8 +3,8 @@ use std::io::prelude::*;
 use rustc_serialize::{Encodable, Decodable};
 use toml::{self, Encoder, Value};
 
-use core::{Resolve, resolver, Workspace};
-use core::resolver::WorkspaceResolve;
+use core::Workspace;
+use resolver::{EncodableResolve, WorkspaceResolve, Resolve};
 use util::{CraftResult, ChainError, human, Filesystem};
 use util::toml as craft_toml;
 
@@ -23,7 +23,7 @@ pub fn load_pkg_lockfile(ws: &Workspace) -> CraftResult<Option<Resolve>> {
             let table = try!(craft_toml::parse(&s, f.path(), ws.config()));
             let table = toml::Value::Table(table);
             let mut d = toml::Decoder::new(table);
-            let v: resolver::EncodableResolve = try!(Decodable::decode(&mut d));
+            let v: EncodableResolve = try!(Decodable::decode(&mut d));
             Ok(Some(try!(v.into_resolve(ws))))
         })
         .chain_error(|| human(format!("failed to parse lock file at: {}", f.path().display())))

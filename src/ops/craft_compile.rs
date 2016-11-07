@@ -24,10 +24,10 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use core::registry::PackageRegistry;
+use registry::PackageRegistry;
 use core::{Source, SourceId, PackageSet, Package, Target};
 use core::{Profile, TargetKind, Profiles, Workspace, PackageIdSpec};
-use core::resolver::{Method, Resolve};
+use resolver::{Method, Resolve};
 use ops::{self, BuildOutput};
 use sources::PathSource;
 use util::config::Config;

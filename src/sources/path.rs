@@ -6,10 +6,11 @@ use filetime::FileTime;
 use git2;
 use glob::Pattern;
 
-use core::{Package, PackageId, Summary, SourceId, Source, Dependency, Registry};
+use core::{Package, PackageId, SourceId, Source, Dependency, Registry};
 use ops;
 use util::{self, CraftResult, internal, internal_error, human, ChainError};
 use util::Config;
+use summary::Summary;
 
 pub struct PathSource<'cfg> {
     id: SourceId,

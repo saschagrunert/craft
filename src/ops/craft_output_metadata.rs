@@ -1,6 +1,6 @@
 use rustc_serialize::{Encodable, Encoder};
 
-use core::resolver::Resolve;
+use resolver::Resolve;
 use core::{Package, PackageId, Workspace};
 use ops;
 use util::CraftResult;

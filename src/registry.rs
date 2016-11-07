@@ -1,7 +1,8 @@
 use std::collections::HashMap;
 
-use core::{Source, SourceId, SourceMap, Summary, Dependency, PackageId, Package};
+use core::{Source, SourceId, SourceMap, Dependency, PackageId, Package};
 use core::PackageSet;
+use summary::Summary;
 use util::{CraftResult, ChainError, Config, human, profile};
 use sources::config::SourceConfigMap;
 
@@ -370,70 +371,8 @@ impl<'cfg> Registry for PackageRegistry<'cfg> {
             (None, None) => Vec::new(),
         };
 
-        // post-process all returned summaries to ensure that we lock all
-        // relevant summaries to the right versions and sources
+        // post-process all returned summaries to ensure that we lock all relevant summaries to the
+        // right versions and sources
         Ok(ret.into_iter().map(|summary| self.lock(summary)).collect())
-    }
-}
-
-#[cfg(test)]
-pub mod test {
-    use core::{Summary, Registry, Dependency};
-    use util::CraftResult;
-
-    pub struct RegistryBuilder {
-        summaries: Vec<Summary>,
-        overrides: Vec<Summary>,
-    }
-
-    impl RegistryBuilder {
-        pub fn new() -> RegistryBuilder {
-            RegistryBuilder {
-                summaries: vec![],
-                overrides: vec![],
-            }
-        }
-
-        pub fn summary(mut self, summary: Summary) -> RegistryBuilder {
-            self.summaries.push(summary);
-            self
-        }
-
-        pub fn summaries(mut self, summaries: Vec<Summary>) -> RegistryBuilder {
-            self.summaries.extend(summaries.into_iter());
-            self
-        }
-
-        pub fn add_override(mut self, summary: Summary) -> RegistryBuilder {
-            self.overrides.push(summary);
-            self
-        }
-
-        pub fn overrides(mut self, summaries: Vec<Summary>) -> RegistryBuilder {
-            self.overrides.extend(summaries.into_iter());
-            self
-        }
-
-        fn query_overrides(&self, dep: &Dependency) -> Vec<Summary> {
-            self.overrides
-                .iter()
-                .filter(|s| s.name() == dep.name())
-                .map(|s| s.clone())
-                .collect()
-        }
-    }
-
-    impl Registry for RegistryBuilder {
-        fn query(&mut self, dep: &Dependency) -> CraftResult<Vec<Summary>> {
-            debug!("querying; dep={:?}", dep);
-
-            let overrides = self.query_overrides(dep);
-
-            if overrides.is_empty() {
-                self.summaries.query(dep)
-            } else {
-                Ok(overrides)
-            }
-        }
     }
 }

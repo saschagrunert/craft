@@ -4,9 +4,10 @@ use std::path::{PathBuf, Path};
 use semver::Version;
 use rustc_serialize::{Encoder, Encodable};
 
-use core::{Dependency, PackageId, Summary, SourceId, PackageIdSpec};
+use core::{Dependency, PackageId, SourceId, PackageIdSpec};
 use core::WorkspaceConfig;
-use core::package_id::Metadata;
+use package_id::Metadata;
+use summary::Summary;
 
 pub enum EitherManifest {
     Real(Manifest),
@@ -212,42 +213,55 @@ impl Manifest {
     pub fn dependencies(&self) -> &[Dependency] {
         self.summary.dependencies()
     }
+
     pub fn exclude(&self) -> &[String] {
         &self.exclude
     }
+
     pub fn include(&self) -> &[String] {
         &self.include
     }
+
     pub fn metadata(&self) -> &ManifestMetadata {
         &self.metadata
     }
+
     pub fn name(&self) -> &str {
         self.package_id().name()
     }
+
     pub fn package_id(&self) -> &PackageId {
         self.summary.package_id()
     }
+
     pub fn summary(&self) -> &Summary {
         &self.summary
     }
+
     pub fn targets(&self) -> &[Target] {
         &self.targets
     }
+
     pub fn version(&self) -> &Version {
         self.package_id().version()
     }
+
     pub fn warnings(&self) -> &[String] {
         &self.warnings
     }
+
     pub fn profiles(&self) -> &Profiles {
         &self.profiles
     }
+
     pub fn publish(&self) -> bool {
         self.publish
     }
+
     pub fn replace(&self) -> &[(PackageIdSpec, Dependency)] {
         &self.replace
     }
+
     pub fn links(&self) -> Option<&str> {
         self.links.as_ref().map(|s| &s[..])
     }
@@ -382,30 +396,39 @@ impl Target {
     pub fn name(&self) -> &str {
         &self.name
     }
+
     pub fn crate_name(&self) -> String {
         self.name.replace("-", "_")
     }
+
     pub fn src_path(&self) -> &Path {
         &self.src_path
     }
+
     pub fn metadata(&self) -> Option<&Metadata> {
         self.metadata.as_ref()
     }
+
     pub fn kind(&self) -> &TargetKind {
         &self.kind
     }
+
     pub fn tested(&self) -> bool {
         self.tested
     }
+
     pub fn harness(&self) -> bool {
         self.harness
     }
+
     pub fn documented(&self) -> bool {
         self.doc
     }
+
     pub fn for_host(&self) -> bool {
         self.for_host
     }
+
     pub fn benched(&self) -> bool {
         self.benched
     }
@@ -475,22 +498,27 @@ impl Target {
         self.tested = tested;
         self
     }
+
     pub fn set_benched(&mut self, benched: bool) -> &mut Target {
         self.benched = benched;
         self
     }
+
     pub fn set_doctest(&mut self, doctest: bool) -> &mut Target {
         self.doctest = doctest;
         self
     }
+
     pub fn set_for_host(&mut self, for_host: bool) -> &mut Target {
         self.for_host = for_host;
         self
     }
+
     pub fn set_harness(&mut self, harness: bool) -> &mut Target {
         self.harness = harness;
         self
     }
+
     pub fn set_doc(&mut self, doc: bool) -> &mut Target {
         self.doc = doc;
         self

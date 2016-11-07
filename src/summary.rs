@@ -6,9 +6,7 @@ use core::{Dependency, PackageId, SourceId};
 
 use util::CraftResult;
 
-/// Subset of a `Manifest`. Contains only the most important informations about
-/// a package.
-///
+/// Subset of a `Manifest`. Contains only the most important informations about a package.
 /// Summaries are cloned, and should not be mutated after creation
 #[derive(Debug,Clone)]
 pub struct Summary {
@@ -25,8 +23,7 @@ impl Summary {
                -> CraftResult<Summary> {
         for dep in dependencies.iter() {
             if features.get(dep.name()).is_some() {
-                bail!("Features and dependencies cannot have the \
-                       same name: `{}`",
+                bail!("Features and dependencies cannot have the same name: `{}`",
                       dep.name())
             }
             if dep.is_optional() && !dep.is_transitive() {
@@ -79,21 +76,27 @@ impl Summary {
     pub fn package_id(&self) -> &PackageId {
         &self.package_id
     }
+
     pub fn name(&self) -> &str {
         self.package_id().name()
     }
+
     pub fn version(&self) -> &Version {
         self.package_id().version()
     }
+
     pub fn source_id(&self) -> &SourceId {
         self.package_id.source_id()
     }
+
     pub fn dependencies(&self) -> &[Dependency] {
         &self.dependencies
     }
+
     pub fn features(&self) -> &HashMap<String, Vec<String>> {
         &self.features
     }
+
     pub fn checksum(&self) -> Option<&str> {
         self.checksum.as_ref().map(|s| &s[..])
     }

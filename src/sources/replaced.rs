@@ -1,4 +1,5 @@
-use core::{Source, Registry, PackageId, Package, Dependency, Summary, SourceId};
+use core::{Source, Registry, PackageId, Package, Dependency, SourceId};
+use summary::Summary;
 use util::{CraftResult, ChainError, human};
 
 pub struct ReplacedSource<'cfg> {

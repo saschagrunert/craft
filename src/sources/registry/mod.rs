@@ -165,8 +165,9 @@ use std::path::{PathBuf, Path};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-use core::{Source, SourceId, PackageId, Package, Summary, Registry};
-use core::dependency::Dependency;
+use core::{Source, SourceId, PackageId, Package, Registry};
+use summary::Summary;
+use dependency::Dependency;
 use sources::PathSource;
 use util::{CraftResult, Config, internal, ChainError, FileLock, Filesystem};
 use util::hex;

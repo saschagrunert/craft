@@ -2,15 +2,14 @@ use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;
 
-use semver::VersionReq;
-use semver::ReqParseError;
+use semver::{ReqParseError, VersionReq};
 use rustc_serialize::{Encoder, Encodable};
 
-use core::{SourceId, Summary, PackageId};
+use core::{SourceId, PackageId};
+use summary::Summary;
 use util::{CraftError, CraftResult, Cfg, CfgExpr, ChainError, human, Config};
 
-/// Information about a dependency requested by a Craft manifest.
-/// Cheap to copy.
+/// Information about a dependency requested by a Craft manifest. Cheap to copy.
 #[derive(PartialEq, Clone ,Debug)]
 pub struct Dependency {
     inner: Rc<DependencyInner>,
@@ -30,8 +29,7 @@ pub struct DependencyInner {
     default_features: bool,
     features: Vec<String>,
 
-    // This dependency should be used only for this platform.
-    // `None` means *all platforms*.
+    // This dependency should be used only for this platform. `None` means *all platforms*.
     platform: Option<Platform>,
 }
 
@@ -169,15 +167,19 @@ this warning.
     pub fn version_req(&self) -> &VersionReq {
         &self.req
     }
+
     pub fn name(&self) -> &str {
         &self.name
     }
+
     pub fn source_id(&self) -> &SourceId {
         &self.source_id
     }
+
     pub fn kind(&self) -> Kind {
         self.kind
     }
+
     pub fn specified_req(&self) -> bool {
         self.specified_req
     }
@@ -243,19 +245,23 @@ this warning.
             Kind::Development => false,
         }
     }
+
     pub fn is_build(&self) -> bool {
         match self.kind {
             Kind::Build => true,
             _ => false,
         }
     }
+
     pub fn is_optional(&self) -> bool {
         self.optional
     }
+
     /// Returns true if the default features of the dependency are requested.
     pub fn uses_default_features(&self) -> bool {
         self.default_features
     }
+
     /// Returns the list of features that are requested by the dependency.
     pub fn features(&self) -> &[String] {
         &self.features
@@ -305,15 +311,19 @@ impl Dependency {
     pub fn version_req(&self) -> &VersionReq {
         self.inner.version_req()
     }
+
     pub fn name(&self) -> &str {
         self.inner.name()
     }
+
     pub fn source_id(&self) -> &SourceId {
         self.inner.source_id()
     }
+
     pub fn kind(&self) -> Kind {
         self.inner.kind()
     }
+
     pub fn specified_req(&self) -> bool {
         self.inner.specified_req()
     }
@@ -333,9 +343,11 @@ impl Dependency {
     pub fn is_transitive(&self) -> bool {
         self.inner.is_transitive()
     }
+
     pub fn is_build(&self) -> bool {
         self.inner.is_build()
     }
+
     pub fn is_optional(&self) -> bool {
         self.inner.is_optional()
     }
@@ -344,6 +356,7 @@ impl Dependency {
     pub fn uses_default_features(&self) -> bool {
         self.inner.uses_default_features()
     }
+
     /// Returns the list of features that are requested by the dependency.
     pub fn features(&self) -> &[String] {
         self.inner.features()
