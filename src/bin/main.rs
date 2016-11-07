@@ -1,5 +1,4 @@
 //! The top level executable
-extern crate clap;
 extern crate craft;
 extern crate url;
 extern crate env_logger;
@@ -52,7 +51,6 @@ Options:
 Some common craft commands are (see all commands with --list):
     build       Compile the current project
     clean       Remove the target directory
-    doc         Build this project's and its dependencies' documentation
     new         Create a new craft project
     init        Create a new craft project in an existing directory
     run         Build and execute src/main.c
@@ -73,11 +71,9 @@ macro_rules! each_subcommand{
         $mac!(bench);
         $mac!(build);
         $mac!(clean);
-        $mac!(doc);
         $mac!(fetch);
         $mac!(generate_lockfile);
         $mac!(git_checkout);
-        $mac!(help);
         $mac!(init);
         $mac!(locate_project);
         $mac!(metadata);
@@ -86,8 +82,6 @@ macro_rules! each_subcommand{
         $mac!(pkgid);
         $mac!(run);
         $mac!(rustc);
-        $mac!(rustdoc);
-        $mac!(test);
         $mac!(update);
         $mac!(verify_project);
     }
@@ -122,9 +116,8 @@ fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
     }
 
     let args = match &flags.arg_command[..] {
-        // For the commands `craft` and `craft help`, re-execute ourselves as
-        // `craft -h` so we can go through the normal process of printing the
-        // help message.
+        // For the commands `craft` and `craft help`, re-execute ourselves as `craft -h` so we can
+        // go through the normal process of printing the help message.
         "" | "help" if flags.arg_args.is_empty() => {
             config.shell().set_verbosity(Verbosity::Verbose);
             let args = &["craft".to_string(), "-h".to_string()];
@@ -133,19 +126,17 @@ fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
             return Ok(None);
         }
 
-        // For `craft help -h` and `craft help --help`, print out the help
-        // message for `craft help`
+        // For `craft help -h` and `craft help --help`, print out the help message for `craft help`
         "help" if flags.arg_args[0] == "-h" || flags.arg_args[0] == "--help" => {
             vec!["craft".to_string(), "help".to_string(), "-h".to_string()]
         }
 
-        // For `craft help foo`, print out the usage message for the specified
-        // subcommand by executing the command with the `-h` flag.
+        // For `craft help foo`, print out the usage message for the specified subcommand by
+        // executing the command with the `-h` flag.
         "help" => vec!["craft".to_string(), flags.arg_args[0].clone(), "-h".to_string()],
 
-        // For all other invocations, we're of the form `craft foo args...`. We
-        // use the exact environment arguments to preserve tokens like `--` for
-        // example.
+        // For all other invocations, we're of the form `craft foo args...`. We use the exact
+        // environment arguments to preserve tokens like `--` for example.
         _ => {
             let mut default_alias = HashMap::new();
             default_alias.insert("b", "build".to_string());
@@ -230,8 +221,7 @@ fn aliased_command(config: &Config, command: &String) -> CraftResult<Option<Vec<
 
 fn find_closest(config: &Config, cmd: &str) -> Option<String> {
     let cmds = list_commands(config);
-    // Only consider candidates with a lev_distance of 3 or less so we don't
-    // suggest out-of-the-blue options.
+    // Only consider candidates with a lev_distance of 3 or less so we don't suggest out-of-the-blue options.
     let mut filtered = cmds.iter()
         .map(|c| (lev_distance(&c, cmd), c))
         .filter(|&(d, _)| d < 4)
@@ -272,8 +262,7 @@ fn execute_subcommand(config: &Config, cmd: &str, args: &[String]) -> CliResult<
     }
 }
 
-/// List all runnable commands. find_command should always succeed
-/// if given one of returned command.
+/// List all runnable commands. find_command should always succeed if given one of returned command.
 fn list_commands(config: &Config) -> BTreeSet<String> {
     let prefix = "craft-";
     let suffix = env::consts::EXE_SUFFIX;

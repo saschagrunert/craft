@@ -1,7 +1,7 @@
 use craft::core::Workspace;
 use craft::ops;
 use craft::util::{CliResult, Config};
-use craft::util::important_paths::{find_root_manifest_for_wd};
+use craft::util::important_paths::find_root_manifest_for_wd;
 
 #[derive(RustcDecodable)]
 pub struct Options {
@@ -52,8 +52,7 @@ Example Package IDs
 
 ";
 
-pub fn execute(options: Options,
-               config: &Config) -> CliResult<Option<()>> {
+pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
     try!(config.configure(options.flag_verbose,
                           options.flag_quiet,
                           &options.flag_color,
@@ -74,4 +73,3 @@ pub fn execute(options: Options,
     println!("{}", spec);
     Ok(None)
 }
-

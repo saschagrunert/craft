@@ -40,7 +40,8 @@ Options:
 ";
 
 pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
-    debug!("executing; cmd=craft-init; args={:?}", env::args().collect::<Vec<_>>());
+    debug!("executing; cmd=craft-init; args={:?}",
+           env::args().collect::<Vec<_>>());
     try!(config.configure(options.flag_verbose,
                           options.flag_quiet,
                           &options.flag_color,
@@ -51,18 +52,21 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
 
     let tmp = &arg_path.unwrap_or(format!("."));
     let opts = ops::NewOptions::new(flag_vcs,
-                                     flag_bin,
-                                     flag_lib,
-                                     tmp,
-                                     flag_name.as_ref().map(|s| s.as_ref()));
+                                    flag_bin,
+                                    flag_lib,
+                                    tmp,
+                                    flag_name.as_ref().map(|s| s.as_ref()));
 
     let opts_lib = opts.lib;
     try!(ops::init(opts, config));
 
-    try!(config.shell().status("Created", format!("{} project",
-                                                   if opts_lib { "library" }
-                                                   else {"binary (application)"})));
+    try!(config.shell().status("Created",
+                               format!("{} project",
+                                       if opts_lib {
+                                           "library"
+                                       } else {
+                                           "binary (application)"
+                                       })));
 
     Ok(None)
 }
-

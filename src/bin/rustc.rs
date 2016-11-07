@@ -2,7 +2,7 @@ use std::env;
 
 use craft::core::Workspace;
 use craft::ops::{self, CompileOptions, CompileMode, MessageFormat};
-use craft::util::important_paths::{find_root_manifest_for_wd};
+use craft::util::important_paths::find_root_manifest_for_wd;
 use craft::util::{CliResult, CliError, Config, human};
 
 #[derive(RustcDecodable)]
@@ -82,16 +82,16 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
                           options.flag_frozen,
                           options.flag_locked));
 
-    let root = try!(find_root_manifest_for_wd(options.flag_manifest_path,
-                                              config.cwd()));
+    let root = try!(find_root_manifest_for_wd(options.flag_manifest_path, config.cwd()));
     let mode = match options.flag_profile.as_ref().map(|t| &t[..]) {
         Some("dev") | None => CompileMode::Build,
         Some("test") => CompileMode::Test,
         Some("bench") => CompileMode::Bench,
         Some(mode) => {
             let err = human(format!("unknown profile: `{}`, use dev,
-                                     test, or bench", mode));
-            return Err(CliError::new(err, 101))
+                                     test, or bench",
+                                    mode));
+            return Err(CliError::new(err, 101));
         }
     };
 
@@ -119,4 +119,3 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
     try!(ops::compile(&ws, &opts));
     Ok(None)
 }
-

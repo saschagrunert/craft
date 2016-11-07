@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::process;
 
-use craft::util::important_paths::{find_root_manifest_for_wd};
+use craft::util::important_paths::find_root_manifest_for_wd;
 use craft::util::{CliResult, Config};
 use rustc_serialize::json;
 use toml;
@@ -53,8 +53,8 @@ pub fn execute(args: Flags, config: &Config) -> CliResult<Option<Error>> {
 
     let file = File::open(&filename);
     match file.and_then(|mut f| f.read_to_string(&mut contents)) {
-        Ok(_) => {},
-        Err(e) => fail("invalid", &format!("error reading file: {}", e))
+        Ok(_) => {}
+        Err(e) => fail("invalid", &format!("error reading file: {}", e)),
     };
     match toml::Parser::new(&contents).parse() {
         None => fail("invalid", "invalid-format"),

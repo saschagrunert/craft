@@ -3,7 +3,7 @@ use std::env;
 use craft::core::Workspace;
 use craft::ops;
 use craft::util::{CliResult, Config};
-use craft::util::important_paths::{find_root_manifest_for_wd};
+use craft::util::important_paths::find_root_manifest_for_wd;
 
 #[derive(RustcDecodable)]
 pub struct Options {
@@ -43,7 +43,8 @@ and its format, see the `craft help pkgid` command.
 ";
 
 pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
-    debug!("executing; cmd=craft-clean; args={:?}", env::args().collect::<Vec<_>>());
+    debug!("executing; cmd=craft-clean; args={:?}",
+           env::args().collect::<Vec<_>>());
     try!(config.configure(options.flag_verbose,
                           options.flag_quiet,
                           &options.flag_color,

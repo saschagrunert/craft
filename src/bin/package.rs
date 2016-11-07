@@ -47,13 +47,14 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
                           options.flag_locked));
     let root = try!(find_root_manifest_for_wd(options.flag_manifest_path, config.cwd()));
     let ws = try!(Workspace::new(&root, config));
-    try!(ops::package(&ws, &ops::PackageOpts {
-        config: config,
-        verify: !options.flag_no_verify,
-        list: options.flag_list,
-        check_metadata: !options.flag_no_metadata,
-        allow_dirty: options.flag_allow_dirty,
-        jobs: options.flag_jobs,
-    }));
+    try!(ops::package(&ws,
+                      &ops::PackageOpts {
+                          config: config,
+                          verify: !options.flag_no_verify,
+                          list: options.flag_list,
+                          check_metadata: !options.flag_no_metadata,
+                          allow_dirty: options.flag_allow_dirty,
+                          jobs: options.flag_jobs,
+                      }));
     Ok(None)
 }

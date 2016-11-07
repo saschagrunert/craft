@@ -1,7 +1,7 @@
 use craft::core::Workspace;
 use craft::ops::{self, MessageFormat};
 use craft::util::{CliResult, CliError, Config, Human};
-use craft::util::important_paths::{find_root_manifest_for_wd};
+use craft::util::important_paths::find_root_manifest_for_wd;
 
 #[derive(RustcDecodable)]
 pub struct Options {
@@ -88,8 +88,11 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
             ops::CompileFilter::Everything
         } else {
             ops::CompileFilter::Only {
-                lib: false, tests: &[], benches: &[],
-                bins: &bins, examples: &examples,
+                lib: false,
+                tests: &[],
+                benches: &[],
+                bins: &bins,
+                examples: &examples,
             }
         },
         message_format: options.flag_message_format,

@@ -49,4 +49,3 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
     try!(ops::fetch(&ws));
     Ok(None)
 }
-

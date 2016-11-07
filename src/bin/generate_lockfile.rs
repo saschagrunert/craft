@@ -32,7 +32,8 @@ Options:
 ";
 
 pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
-    debug!("executing; cmd=craft-generate-lockfile; args={:?}", env::args().collect::<Vec<_>>());
+    debug!("executing; cmd=craft-generate-lockfile; args={:?}",
+           env::args().collect::<Vec<_>>());
     try!(config.configure(options.flag_verbose,
                           options.flag_quiet,
                           &options.flag_color,

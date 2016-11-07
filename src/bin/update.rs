@@ -58,7 +58,8 @@ For more information about package id specifications, see `craft help pkgid`.
 ";
 
 pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
-    debug!("executing; cmd=craft-update; args={:?}", env::args().collect::<Vec<_>>());
+    debug!("executing; cmd=craft-update; args={:?}",
+           env::args().collect::<Vec<_>>());
     try!(config.configure(options.flag_verbose,
                           options.flag_quiet,
                           &options.flag_color,
