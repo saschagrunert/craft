@@ -26,7 +26,8 @@ use std::path::PathBuf;
 
 use registry::PackageRegistry;
 use core::{Source, SourceId, PackageSet, Package, Target};
-use core::{Profile, TargetKind, Profiles, Workspace, PackageIdSpec};
+use core::{Profile, TargetKind, Profiles, Workspace};
+use package_id_spec::PackageIdSpec;
 use resolver::{Method, Resolve};
 use ops::{self, BuildOutput};
 use sources::PathSource;

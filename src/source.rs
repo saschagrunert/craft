@@ -8,10 +8,9 @@ use std::sync::Arc;
 use rustc_serialize::{Decodable, Decoder, Encodable, Encoder};
 use url::Url;
 
-use core::{Package, PackageId, Registry};
-use sources::git;
-use sources::{PathSource, GitSource, RegistrySource, CRATES_IO};
-use sources::DirectorySource;
+use core::{Package, PackageId};
+use sources::{git, PathSource, GitSource, RegistrySource, CRATES_IO, DirectorySource};
+use registry::Registry;
 use util::{human, Config, CraftResult, ToUrl};
 
 /// A Source finds and downloads remote packages based on names and versions.

@@ -7,8 +7,9 @@ use std::path::{Path, PathBuf};
 use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
 
-use core::{Package, PackageId, SourceId, Source, Dependency, Registry};
+use core::{Package, PackageId, SourceId, Source, Dependency};
 use sources::PathSource;
+use registry::Registry;
 use summary::Summary;
 use util::{CraftResult, human, ChainError, Config, Sha256};
 use util::paths;

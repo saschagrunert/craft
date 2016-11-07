@@ -1,8 +1,9 @@
 use std::collections::HashSet;
 
-use core::{PackageId, PackageIdSpec, SourceId, Workspace};
+use core::{PackageId, SourceId, Workspace};
 use registry::PackageRegistry;
 use resolver::{self, Resolve, Method};
+use package_id_spec::PackageIdSpec;
 use ops;
 use util::CraftResult;
 

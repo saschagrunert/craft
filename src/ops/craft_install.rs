@@ -10,9 +10,10 @@ use std::path::{Path, PathBuf};
 use tempdir::TempDir;
 use toml;
 
-use core::{SourceId, Source, Package, Dependency, PackageIdSpec};
+use core::{SourceId, Source, Package, Dependency};
 use core::{PackageId, Workspace};
 use ops::{self, CompileFilter};
+use package_id_spec::PackageIdSpec;
 use sources::{GitSource, PathSource, SourceConfigMap};
 use util::{CraftResult, ChainError, Config, human, internal};
 use util::{Filesystem, FileLock};

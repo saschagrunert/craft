@@ -9,12 +9,13 @@ use toml;
 use semver::{self, VersionReq};
 use rustc_serialize::{Decodable, Decoder};
 
-use core::{SourceId, Profiles, PackageIdSpec, GitReference, WorkspaceConfig};
+use core::{SourceId, Profiles, GitReference, WorkspaceConfig};
 use core::{Manifest, Target, Dependency, DependencyInner, PackageId};
 
 use dependency::{Kind, Platform};
 use manifest::{EitherManifest, VirtualManifest, LibKind, Profile, ManifestMetadata};
 use package_id::Metadata;
+use package_id_spec::PackageIdSpec;
 use sources::CRATES_IO;
 use summary::Summary;
 use util::{self, CraftResult, human, ToUrl, ToSemver, ChainError, Config};

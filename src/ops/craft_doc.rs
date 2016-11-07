@@ -3,7 +3,8 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use core::{PackageIdSpec, Workspace};
+use core::Workspace;
+use package_id_spec::PackageIdSpec;
 use ops;
 use util::CraftResult;
 

@@ -4,9 +4,10 @@ use url::Url;
 
 use source::{Source, SourceId};
 use core::GitReference;
-use core::{Package, PackageId, Registry, Dependency};
+use core::{Package, PackageId, Dependency};
 use util::{CraftResult, Config};
 use util::hex::short_hash;
+use registry::Registry;
 use summary::Summary;
 use sources::PathSource;
 use sources::git::utils::{GitRemote, GitRevision};

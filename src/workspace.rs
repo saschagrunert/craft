@@ -4,8 +4,9 @@ use std::path::{Path, PathBuf};
 use std::slice;
 
 use core::{Package, VirtualManifest, EitherManifest, SourceId};
-use core::{PackageIdSpec, Dependency, Profile, Profiles};
+use core::{Dependency, Profile, Profiles};
 use ops;
+use package_id_spec::PackageIdSpec;
 use util::{Config, CraftResult, Filesystem, human};
 use util::paths;
 

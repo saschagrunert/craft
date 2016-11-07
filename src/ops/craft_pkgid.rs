@@ -1,5 +1,6 @@
 use ops;
-use core::{PackageIdSpec, Workspace};
+use core::Workspace;
+use package_id_spec::PackageIdSpec;
 use util::CraftResult;
 
 pub fn pkgid(ws: &Workspace, spec: Option<&str>) -> CraftResult<PackageIdSpec> {

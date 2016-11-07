@@ -4,9 +4,10 @@ use std::path::{PathBuf, Path};
 use semver::Version;
 use rustc_serialize::{Encoder, Encodable};
 
-use core::{Dependency, PackageId, SourceId, PackageIdSpec};
+use core::{Dependency, PackageId, SourceId};
 use core::WorkspaceConfig;
 use package_id::Metadata;
+use package_id_spec::PackageIdSpec;
 use summary::Summary;
 
 pub enum EitherManifest {
