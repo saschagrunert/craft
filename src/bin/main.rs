@@ -1,4 +1,5 @@
 //! The top level executable
+extern crate clap;
 extern crate craft;
 extern crate url;
 extern crate env_logger;
