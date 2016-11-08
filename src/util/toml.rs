@@ -739,7 +739,8 @@ impl TomlManifest {
         let mut replace = Vec::new();
         for (spec, replacement) in self.replace.iter().flat_map(|x| x) {
             let spec = try!(PackageIdSpec::parse(spec).chain_error(|| {
-                human(format!("replacements must specify a valid semver version to replace, but `{}` does not", spec))
+                human(format!("replacements must specify a valid semver version to replace, but `{}` does not",
+                              spec))
             }));
             // Normally we could set a default crate url here
             let version_specified = match *replacement {
@@ -747,13 +748,15 @@ impl TomlManifest {
                 TomlDependency::Simple(..) => true,
             };
             if version_specified {
-                bail!("replacements cannot specify a version requirement, but found one for `{}`", spec);
+                bail!("replacements cannot specify a version requirement, but found one for `{}`",
+                      spec);
             }
 
             let dep = try!(replacement.to_dependency(spec.name(), cx, None));
             let dep = {
                 let version = try!(spec.version().chain_error(|| {
-                    human(format!("replacements must specify a version to replace, but `{}` does not", spec))
+                    human(format!("replacements must specify a version to replace, but `{}` does not",
+                                  spec))
                 }));
                 let req = VersionReq::exact(version);
                 dep.clone_inner()
