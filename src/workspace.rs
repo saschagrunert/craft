@@ -1,3 +1,4 @@
+//! Workspace manipulation and description
 use std::collections::hash_map::{HashMap, Entry};
 use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};

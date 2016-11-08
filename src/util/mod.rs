@@ -1,3 +1,4 @@
+//! General purpose utility functions and structures
 pub use self::cfg::{Cfg, CfgExpr};
 pub use self::config::Config;
 pub use self::dependency_queue::{DependencyQueue, Fresh, Dirty, Freshness};

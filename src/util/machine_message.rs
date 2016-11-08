@@ -1,3 +1,4 @@
+//! Compiler message parsing and emission
 use rustc_serialize::json;
 
 use manifest::Target;

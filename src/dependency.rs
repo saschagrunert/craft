@@ -1,3 +1,4 @@
+//! Dependency parsing and management
 use std::fmt;
 use std::rc::Rc;
 use std::str::FromStr;

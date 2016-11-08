@@ -1,3 +1,4 @@
+//! Error reporting and conversion
 use std::error::Error;
 use std::ffi;
 use std::fmt;

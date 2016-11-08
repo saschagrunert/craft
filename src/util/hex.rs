@@ -1,3 +1,4 @@
+//! Hex conversion helper utilities
 #![allow(deprecated)]
 
 use std::hash::{Hasher, Hash, SipHasher};

@@ -1,3 +1,4 @@
+//! Path manipulation utilities
 use std::env;
 use std::ffi::{OsStr, OsString};
 use std::fs::File;

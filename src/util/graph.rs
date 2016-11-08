@@ -1,3 +1,4 @@
+//! Dependency graph utility implementations
 use std::fmt;
 use std::hash::Hash;
 use std::collections::hash_set::{HashSet, Iter};

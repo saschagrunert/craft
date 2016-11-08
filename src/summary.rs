@@ -1,3 +1,4 @@
+//! Summary subset of a Manifest
 use std::collections::HashMap;
 use std::mem;
 

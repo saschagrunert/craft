@@ -1,7 +1,5 @@
-use std::env;
-use std::fmt;
-use std::mem;
-use std::time;
+//! Profiling utilities
+use std::{env, fmt, mem, time};
 use std::iter::repeat;
 use std::cell::RefCell;
 

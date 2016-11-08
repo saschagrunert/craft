@@ -1,3 +1,4 @@
+//! Registry manipulation and description
 use std::collections::HashMap;
 
 use dependency::Dependency;

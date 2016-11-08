@@ -1,3 +1,4 @@
+//! Internal shell handling for reporting purposes
 use std::{io, fmt};
 use std::io::prelude::*;
 

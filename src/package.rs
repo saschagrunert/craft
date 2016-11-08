@@ -1,3 +1,4 @@
+//! General package descriptions
 use std::cell::{Ref, RefCell};
 use std::collections::HashMap;
 use std::{fmt, hash};

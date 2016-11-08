@@ -1,3 +1,4 @@
+//! Source description for any kind of remote
 use std::io::SeekFrom;
 use std::io::prelude::*;
 use std::path::Path;
@@ -128,9 +129,6 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
                 self.handle.as_mut().unwrap()
             }
         };
-        // TODO: don't download into memory, but ensure that if we ctrl-c a
-        //       download we should resume either from the start or the middle
-        //       on the next time
         try!(handle.get(true));
         try!(handle.url(&url.to_string()));
         try!(handle.follow_location(true));

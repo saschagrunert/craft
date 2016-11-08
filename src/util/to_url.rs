@@ -1,7 +1,7 @@
+//! URL conversion trait
 use std::path::Path;
 
 use url::Url;
-
 use util::{human, CraftResult};
 
 pub trait ToUrl {

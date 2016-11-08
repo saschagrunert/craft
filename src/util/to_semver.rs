@@ -1,3 +1,4 @@
+//! Semantic Versioning conversions
 use semver::Version;
 
 pub trait ToSemver {

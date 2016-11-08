@@ -1,3 +1,4 @@
+//! Metadata description about packages
 use std::fmt;
 use std::path::{PathBuf, Path};
 

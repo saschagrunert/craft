@@ -1,3 +1,4 @@
+//! All available internal operations
 pub use self::craft_clean::{clean, CleanOptions};
 pub use self::craft_compile::{compile, compile_ws, resolve_dependencies, CompileOptions};
 pub use self::craft_compile::{CompileFilter, CompileMode, MessageFormat};

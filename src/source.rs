@@ -1,3 +1,4 @@
+//! Manipulations on different kind of sources
 use std::cmp::{self, Ordering};
 use std::collections::hash_map::{HashMap, Values, IterMut};
 use std::fmt::{self, Formatter};

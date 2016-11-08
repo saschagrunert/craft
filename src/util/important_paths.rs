@@ -1,3 +1,4 @@
+//! Path and Manifest finding utilities
 use std::fs;
 use std::path::{Path, PathBuf};
 use util::{CraftResult, human};

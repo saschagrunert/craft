@@ -1,3 +1,4 @@
+//! Source description for certain paths
 use std::fmt::{self, Debug, Formatter};
 use std::fs;
 use std::path::{Path, PathBuf};

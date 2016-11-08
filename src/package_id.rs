@@ -1,3 +1,4 @@
+//! Package ID generation and parsing
 use std::cmp::Ordering;
 use std::error::Error;
 use std::fmt::{self, Formatter};

@@ -1,3 +1,4 @@
+//! Networking utilities
 use util::{CraftResult, Config, errors};
 
 /// Wrapper method for network call retry logic.
@@ -19,8 +20,7 @@ pub fn with_retry<T, E, F>(config: &Config, mut callback: F) -> CraftResult<T>
         match callback() {
             Ok(ret) => return Ok(ret),
             Err(ref e) if e.maybe_spurious() && remaining > 0 => {
-                let msg = format!("spurious network error ({} tries \
-                          remaining): {}",
+                let msg = format!("spurious network error ({} tries remaining): {}",
                                   remaining,
                                   e);
                 try!(config.shell().warn(msg));

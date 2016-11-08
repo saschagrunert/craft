@@ -1,3 +1,4 @@
+//! TOML parsing and manipulation
 use std::collections::{HashMap, HashSet};
 use std::default::Default;
 use std::fmt;

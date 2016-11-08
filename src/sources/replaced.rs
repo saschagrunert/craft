@@ -1,3 +1,4 @@
+//! Source ID replacement
 use dependency::Dependency;
 use package::Package;
 use package_id::PackageId;

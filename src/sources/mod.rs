@@ -1,3 +1,4 @@
+//! Different kind of source implementations for package retrieval
 pub use self::config::SourceConfigMap;
 pub use self::directory::DirectorySource;
 pub use self::git::GitSource;

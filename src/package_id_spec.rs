@@ -1,3 +1,4 @@
+//! Package ID parsing and generation
 use std::collections::HashMap;
 use std::fmt;
 

@@ -1,3 +1,4 @@
+//! The configuration of the crafting area
 use std::cell::{RefCell, RefMut, Cell};
 use std::collections::HashSet;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
