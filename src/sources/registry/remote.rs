@@ -10,13 +10,11 @@ use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
 use url::Url;
 
-use core::{PackageId, SourceId};
+use package_id::PackageId;
+use source::SourceId;
 use sources::git;
 use sources::registry::{RegistryData, RegistryConfig, INDEX_LOCK};
-use util::network;
-use util::paths;
-use util::{FileLock, Filesystem};
-use util::{Config, CraftResult, ChainError, human, Sha256, ToUrl};
+use util::{network, paths, FileLock, Filesystem, Config, CraftResult, ChainError, human, Sha256, ToUrl};
 
 pub struct RemoteRegistry<'cfg> {
     index_path: Filesystem,

@@ -2,10 +2,11 @@ use std::default::Default;
 use std::fs;
 use std::path::Path;
 
-use core::{Profiles, Workspace};
+use manifest::Profiles;
+use ops::{self, Context, BuildConfig, Kind, Unit};
 use registry::PackageRegistry;
 use util::{CraftResult, human, ChainError, Config};
-use ops::{self, Context, BuildConfig, Kind, Unit};
+use workspace::Workspace;
 
 pub struct CleanOptions<'a> {
     pub spec: &'a [String],

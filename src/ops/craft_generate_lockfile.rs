@@ -1,12 +1,13 @@
 use std::collections::{BTreeMap, HashSet};
 
-use core::PackageId;
-use registry::PackageRegistry;
-use core::{SourceId, Workspace};
-use resolver::{Method, Resolve};
 use ops;
-use util::config::Config;
+use package_id::PackageId;
+use registry::PackageRegistry;
+use resolver::{Method, Resolve};
+use source::SourceId;
 use util::CraftResult;
+use util::config::Config;
+use workspace::Workspace;
 
 pub struct UpdateOptions<'a> {
     pub config: &'a Config,

@@ -4,14 +4,16 @@ use std::{fmt, hash};
 use std::path::{Path, PathBuf};
 
 use semver::Version;
-
-use core::{Dependency, Manifest, PackageId, SourceId, Target, TargetKind};
-use core::{Metadata, SourceMap};
-use ops;
-use util::{CraftResult, Config, LazyCell, ChainError, internal, human, lev_distance};
 use rustc_serialize::{Encoder, Encodable};
 
+use dependency::Dependency;
+use manifest::{Manifest, Target, TargetKind};
+use ops;
+use package_id::{PackageId, Metadata};
+use source::SourceId;
+use source::SourceMap;
 use summary::Summary;
+use util::{CraftResult, Config, LazyCell, ChainError, internal, human, lev_distance};
 
 /// Information about a package that is available somewhere in the file system.
 /// A package is a `Craft.toml` file plus all the files that are part of it.

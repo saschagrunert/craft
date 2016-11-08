@@ -1,24 +1,20 @@
 use std::cell::{RefCell, RefMut, Cell};
+use std::collections::HashSet;
 use std::collections::hash_map::Entry::{Occupied, Vacant};
 use std::collections::hash_map::HashMap;
-use std::collections::HashSet;
-use std::env;
-use std::fmt;
 use std::fs::{self, File};
 use std::io::SeekFrom;
 use std::io::prelude::*;
-use std::mem;
 use std::path::{Path, PathBuf};
 use std::str::FromStr;
+use std::{env, fmt, mem};
 
 use rustc_serialize::{Encodable, Encoder};
 use toml;
-use shell::{Verbosity, ColorConfig};
-use core::MultiShell;
-use util::{CraftResult, CraftError, ChainError, Rustc, internal, human};
-use util::{Filesystem, LazyCell};
 
+use shell::{Verbosity, ColorConfig, MultiShell};
 use util::toml as craft_toml;
+use util::{CraftResult, CraftError, ChainError, Rustc, internal, human, Filesystem, LazyCell};
 
 use self::ConfigValue as CV;
 

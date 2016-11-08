@@ -8,9 +8,10 @@ use std::sync::Arc;
 use rustc_serialize::{Decodable, Decoder, Encodable, Encoder};
 use url::Url;
 
-use core::{Package, PackageId};
-use sources::{git, PathSource, GitSource, RegistrySource, CRATES_IO, DirectorySource};
+use package::Package;
+use package_id::PackageId;
 use registry::Registry;
+use sources::{git, PathSource, GitSource, RegistrySource, CRATES_IO, DirectorySource};
 use util::{human, Config, CraftResult, ToUrl};
 
 /// A Source finds and downloads remote packages based on names and versions.
@@ -118,7 +119,7 @@ impl SourceId {
     /// ## Example
     ///
     /// ```
-    /// use craft::core::SourceId;
+    /// use craft::source::SourceId;
     /// SourceId::from_url("git+https://github.com/alexcrichton/\
     ///                     libssh2-static-sys#80e71a3021618eb05\
     ///                     656c58fb7c5ef5f12bc747f");

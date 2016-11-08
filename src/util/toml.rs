@@ -9,16 +9,15 @@ use toml;
 use semver::{self, VersionReq};
 use rustc_serialize::{Decodable, Decoder};
 
-use core::{SourceId, Profiles, GitReference, WorkspaceConfig};
-use core::{Manifest, Target, Dependency, DependencyInner, PackageId};
-
-use dependency::{Kind, Platform};
-use manifest::{EitherManifest, VirtualManifest, LibKind, Profile, ManifestMetadata};
-use package_id::Metadata;
+use dependency::{Dependency, DependencyInner, Kind, Platform};
+use manifest::{EitherManifest, VirtualManifest, LibKind, Profile, ManifestMetadata, Manifest, Profiles, Target};
+use package_id::{PackageId, Metadata};
 use package_id_spec::PackageIdSpec;
+use source::{GitReference, SourceId};
 use sources::CRATES_IO;
 use summary::Summary;
 use util::{self, CraftResult, human, ToUrl, ToSemver, ChainError, Config};
+use workspace::WorkspaceConfig;
 
 /// Representation of the projects file layout.
 ///

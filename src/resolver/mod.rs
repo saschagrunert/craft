@@ -53,14 +53,14 @@ use std::rc::Rc;
 
 use semver;
 
-use core::{PackageId, SourceId, Dependency};
-use registry::Registry;
+use dependency::Dependency;
+use package_id::PackageId;
 use package_id_spec::PackageIdSpec;
+use registry::Registry;
+use source::SourceId;
 use summary::Summary;
-use util::{CraftResult, Graph, human, CraftError};
-use util::profile;
-use util::ChainError;
 use util::graph::{Nodes, Edges};
+use util::{ChainError, profile, CraftResult, Graph, human, CraftError};
 
 pub use self::encode::{EncodableResolve, EncodableDependency, EncodablePackageId};
 pub use self::encode::{Metadata, WorkspaceResolve};

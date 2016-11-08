@@ -4,12 +4,14 @@ use std::path::{Path, PathBuf};
 use std::str::{self, FromStr};
 use std::sync::Arc;
 
-
-use core::{Package, PackageId, PackageSet, Target, Profile};
-use core::{TargetKind, Profiles, Metadata, Dependency, Workspace};
+use dependency::Dependency;
 use dependency::Kind as DepKind;
-use util::{CraftResult, ChainError, internal, Config, profile, Cfg, human};
+use manifest::{Target, Profile, TargetKind, Profiles};
+use package::{Package, PackageSet};
+use package_id::{PackageId, Metadata};
 use resolver::Resolve;
+use util::{CraftResult, ChainError, internal, Config, profile, Cfg, human};
+use workspace::Workspace;
 
 use super::TargetConfig;
 use super::custom_build::{BuildState, BuildScripts};

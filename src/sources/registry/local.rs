@@ -4,10 +4,9 @@ use std::path::Path;
 
 use rustc_serialize::hex::ToHex;
 
-use core::PackageId;
+use package_id::PackageId;
 use sources::registry::{RegistryData, RegistryConfig};
-use util::{Config, CraftResult, ChainError, human, Sha256, Filesystem};
-use util::FileLock;
+use util::{Config, CraftResult, ChainError, human, Sha256, Filesystem, FileLock};
 
 pub struct LocalRegistry<'cfg> {
     index_path: Filesystem,

@@ -4,9 +4,8 @@ use std::path::{PathBuf, Path};
 use std::str;
 use std::sync::{Mutex, Arc};
 
-use core::PackageId;
-use util::{CraftResult, Human, Freshness, Cfg};
-use util::{internal, ChainError, profile, paths};
+use package_id::PackageId;
+use util::{CraftResult, Human, Freshness, Cfg, internal, ChainError, profile, paths};
 
 use super::job::Work;
 use super::{fingerprint, Kind, Context, Unit};

@@ -1,4 +1,4 @@
-use craft::core::Workspace;
+use craft::workspace::Workspace;
 use craft::ops::{output_metadata, OutputMetadataOptions, ExportInfo};
 use craft::util::important_paths::find_root_manifest_for_wd;
 use craft::util::{CliResult, Config};

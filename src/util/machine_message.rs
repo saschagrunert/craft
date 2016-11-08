@@ -1,5 +1,7 @@
 use rustc_serialize::json;
-use core::{PackageId, Target};
+
+use manifest::Target;
+use package_id::PackageId;
 
 #[derive(RustcEncodable)]
 pub struct FromCompiler<'a> {

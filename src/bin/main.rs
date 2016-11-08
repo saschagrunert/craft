@@ -81,7 +81,6 @@ macro_rules! each_subcommand{
         $mac!(package);
         $mac!(pkgid);
         $mac!(run);
-        $mac!(rustc);
         $mac!(update);
         $mac!(verify_project);
     }

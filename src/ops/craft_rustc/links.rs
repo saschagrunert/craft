@@ -1,7 +1,8 @@
 use std::collections::{HashMap, HashSet};
 
-use core::PackageId;
+use package_id::PackageId;
 use util::CraftResult;
+
 use super::Unit;
 
 pub struct Links<'a> {

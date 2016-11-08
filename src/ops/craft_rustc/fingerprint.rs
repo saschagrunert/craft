@@ -8,10 +8,9 @@ use std::sync::{Arc, Mutex};
 use filetime::FileTime;
 use rustc_serialize::{json, Encodable, Decodable, Encoder, Decoder};
 
-use core::{Package, TargetKind};
-use util;
-use util::{CraftResult, Fresh, Dirty, Freshness, internal, profile, ChainError};
-use util::paths;
+use manifest::TargetKind;
+use package::Package;
+use util::{self, paths, CraftResult, Fresh, Dirty, Freshness, internal, profile, ChainError};
 
 use super::job::Work;
 use super::context::{Context, Unit};

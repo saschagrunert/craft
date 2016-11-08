@@ -10,13 +10,16 @@ use std::path::{Path, PathBuf};
 use tempdir::TempDir;
 use toml;
 
-use core::{SourceId, Source, Package, Dependency};
-use core::{PackageId, Workspace};
+use dependency::Dependency;
 use ops::{self, CompileFilter};
+use package::Package;
+use package_id::PackageId;
 use package_id_spec::PackageIdSpec;
+use source::{SourceId, Source};
 use sources::{GitSource, PathSource, SourceConfigMap};
 use util::{CraftResult, ChainError, Config, human, internal};
 use util::{Filesystem, FileLock};
+use workspace::Workspace;
 
 #[derive(RustcDecodable, RustcEncodable)]
 enum CrateListing {

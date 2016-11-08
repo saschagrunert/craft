@@ -1,5 +1,8 @@
-use core::{Source, PackageId, Package, Dependency, SourceId};
+use dependency::Dependency;
+use package::Package;
+use package_id::PackageId;
 use registry::Registry;
+use source::{Source, SourceId};
 use summary::Summary;
 use util::{CraftResult, ChainError, human};
 

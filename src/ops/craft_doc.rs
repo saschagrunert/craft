@@ -3,10 +3,10 @@ use std::fs;
 use std::path::Path;
 use std::process::Command;
 
-use core::Workspace;
-use package_id_spec::PackageIdSpec;
 use ops;
+use package_id_spec::PackageIdSpec;
 use util::CraftResult;
+use workspace::Workspace;
 
 pub struct DocOptions<'a> {
     pub open_result: bool,

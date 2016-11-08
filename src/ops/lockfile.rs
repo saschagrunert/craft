@@ -3,7 +3,7 @@ use std::io::prelude::*;
 use rustc_serialize::{Encodable, Decodable};
 use toml::{self, Encoder, Value};
 
-use core::Workspace;
+use workspace::Workspace;
 use resolver::{EncodableResolve, WorkspaceResolve, Resolve};
 use util::{CraftResult, ChainError, human, Filesystem};
 use util::toml as craft_toml;

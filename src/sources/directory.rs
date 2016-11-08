@@ -7,12 +7,15 @@ use std::path::{Path, PathBuf};
 use rustc_serialize::hex::ToHex;
 use rustc_serialize::json;
 
-use core::{Package, PackageId, SourceId, Source, Dependency};
-use sources::PathSource;
+use dependency::Dependency;
+use package::Package;
+use package_id::PackageId;
 use registry::Registry;
+use source::{SourceId, Source};
+use sources::PathSource;
 use summary::Summary;
-use util::{CraftResult, human, ChainError, Config, Sha256};
 use util::paths;
+use util::{CraftResult, human, ChainError, Config, Sha256};
 
 pub struct DirectorySource<'cfg> {
     id: SourceId,

@@ -165,13 +165,14 @@ use std::path::{PathBuf, Path};
 use flate2::read::GzDecoder;
 use tar::Archive;
 
-use core::{Source, SourceId, PackageId, Package};
 use dependency::Dependency;
+use package::Package;
+use package_id::PackageId;
 use registry::Registry;
-use summary::Summary;
+use source::{Source, SourceId};
 use sources::PathSource;
-use util::{CraftResult, Config, internal, ChainError, FileLock, Filesystem};
-use util::hex;
+use summary::Summary;
+use util::{CraftResult, Config, internal, ChainError, FileLock, Filesystem, hex};
 
 const INDEX_LOCK: &'static str = ".craft-index-lock";
 pub static CRATES_IO: &'static str = "https://github.com/rust-lang/crates.io-index";

@@ -4,11 +4,12 @@ use std::path::{PathBuf, Path};
 use semver::Version;
 use rustc_serialize::{Encoder, Encodable};
 
-use core::{Dependency, PackageId, SourceId};
-use core::WorkspaceConfig;
-use package_id::Metadata;
+use dependency::Dependency;
+use package_id::{PackageId, Metadata};
 use package_id_spec::PackageIdSpec;
+use source::SourceId;
 use summary::Summary;
+use workspace::WorkspaceConfig;
 
 pub enum EitherManifest {
     Real(Manifest),

@@ -1,12 +1,14 @@
 use std::collections::{HashMap, HashSet};
-use std::fs;
-use std::io;
 use std::path::{Path, PathBuf};
+use std::{fs, io};
 
-use core::{Package, SourceId, PackageId, EitherManifest};
-use util::{self, paths, CraftResult, human, Config, ChainError};
+use manifest::EitherManifest;
+use package::Package;
+use package_id::PackageId;
+use source::SourceId;
 use util::important_paths::find_project_manifest_exact;
 use util::toml::Layout;
+use util::{self, paths, CraftResult, human, Config, ChainError};
 
 pub fn read_manifest(path: &Path,
                      source_id: &SourceId,

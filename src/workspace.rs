@@ -3,12 +3,14 @@ use std::collections::BTreeMap;
 use std::path::{Path, PathBuf};
 use std::slice;
 
-use core::{Package, VirtualManifest, EitherManifest, SourceId};
 use core::{Dependency, Profile, Profiles};
+use manifest::{VirtualManifest, EitherManifest};
 use ops;
+use package::Package;
 use package_id_spec::PackageIdSpec;
-use util::{Config, CraftResult, Filesystem, human};
+use source::SourceId;
 use util::paths;
+use util::{Config, CraftResult, Filesystem, human};
 
 /// The core abstraction in Craft for working with a workspace of crates.
 ///

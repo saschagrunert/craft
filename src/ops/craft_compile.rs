@@ -24,15 +24,17 @@
 use std::collections::HashMap;
 use std::path::PathBuf;
 
-use registry::PackageRegistry;
-use core::{Source, SourceId, PackageSet, Package, Target};
-use core::{Profile, TargetKind, Profiles, Workspace};
-use package_id_spec::PackageIdSpec;
-use resolver::{Method, Resolve};
+use manifest::{Profile, Target, TargetKind, Profiles};
 use ops::{self, BuildOutput};
+use package::{PackageSet, Package};
+use package_id_spec::PackageIdSpec;
+use registry::PackageRegistry;
+use resolver::{Method, Resolve};
+use source::{Source, SourceId};
 use sources::PathSource;
 use util::config::Config;
 use util::{CraftResult, profile, human, ChainError};
+use workspace::Workspace;
 
 /// Contains information about how a package should be compiled.
 pub struct CompileOptions<'a> {

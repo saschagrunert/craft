@@ -7,9 +7,9 @@ use std::sync::mpsc::{channel, Sender, Receiver};
 use crossbeam::{self, Scope};
 use term::color::YELLOW;
 
-use core::{PackageId, Target, Profile};
-use util::{Config, DependencyQueue, Fresh, Dirty, Freshness};
-use util::{CraftResult, ProcessBuilder, profile, internal};
+use manifest::{Target, Profile};
+use package_id::PackageId;
+use util::{Config, DependencyQueue, Fresh, Dirty, Freshness, CraftResult, ProcessBuilder, profile, internal};
 
 use super::{Context, Kind, Unit};
 use super::job::Job;

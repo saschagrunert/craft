@@ -1,7 +1,7 @@
 use ops;
-use core::Workspace;
 use package_id_spec::PackageIdSpec;
 use util::CraftResult;
+use workspace::Workspace;
 
 pub fn pkgid(ws: &Workspace, spec: Option<&str>) -> CraftResult<PackageIdSpec> {
     let resolve = match try!(ops::load_pkg_lockfile(ws)) {

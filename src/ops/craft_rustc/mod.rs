@@ -1,19 +1,19 @@
 use std::collections::{HashMap, HashSet};
-use std::env;
 use std::ffi::{OsStr, OsString};
-use std::fs;
 use std::path::{self, PathBuf};
 use std::sync::Arc;
+use std::{env, fs};
 
 use rustc_serialize::json;
 use shell::ColorConfig;
 
-use core::{Package, PackageId, PackageSet, Target};
-use core::{Profile, Profiles, Workspace};
-use util::{self, CraftResult, ProcessBuilder, human, machine_message};
-use util::{Config, internal, ChainError, profile, join_paths, short_hash};
-
+use manifest::{Profile, Profiles, Target};
+use package::{Package, PackageSet};
+use package_id::PackageId;
 use resolver::Resolve;
+use util::{self, CraftResult, ProcessBuilder, human, machine_message, Config, internal, ChainError, profile,
+           join_paths, short_hash};
+use workspace::Workspace;
 
 use self::job::{Job, Work};
 use self::job_queue::JobQueue;

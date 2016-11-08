@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 use std::mem;
 
+use dependency::Dependency;
+use package_id::PackageId;
 use semver::Version;
-use core::{Dependency, PackageId, SourceId};
-
+use source::SourceId;
 use util::CraftResult;
 
 /// Subset of a `Manifest`. Contains only the most important informations about a package.

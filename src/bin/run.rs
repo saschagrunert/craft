@@ -1,4 +1,4 @@
-use craft::core::Workspace;
+use craft::workspace::Workspace;
 use craft::ops::{self, MessageFormat};
 use craft::util::{CliResult, CliError, Config, Human};
 use craft::util::important_paths::find_root_manifest_for_wd;

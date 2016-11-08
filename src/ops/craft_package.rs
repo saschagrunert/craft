@@ -8,10 +8,13 @@ use flate2::{GzBuilder, Compression};
 use git2;
 use tar::{Archive, Builder, Header};
 
-use core::{SourceId, Package, PackageId, Workspace, Source};
+use ops;
+use package::Package;
+use package_id::PackageId;
+use source::{SourceId, Source};
 use sources::PathSource;
 use util::{self, CraftResult, human, internal, ChainError, Config, FileLock};
-use ops;
+use workspace::Workspace;
 
 pub struct PackageOpts<'cfg> {
     pub config: &'cfg Config,

@@ -1,5 +1,5 @@
-use craft::core::Workspace;
 use craft::ops;
+use craft::workspace::Workspace;
 use craft::util::{CliResult, Config};
 use craft::util::important_paths::find_root_manifest_for_wd;
 

@@ -2,7 +2,7 @@ use std::ffi::{OsString, OsStr};
 
 use ops::{self, Compilation};
 use util::{self, CraftResult, CraftTestError, ProcessError};
-use core::Workspace;
+use workspace::Workspace;
 
 pub struct TestOptions<'a> {
     pub compile_opts: ops::CompileOptions<'a>,

@@ -6,10 +6,11 @@ use std::path::Path;
 use rustc_serialize::json;
 
 use dependency::{Dependency, DependencyInner, Kind};
-use core::{SourceId, PackageId};
+use package_id::PackageId;
 use registry::Registry;
-use summary::Summary;
+use source::SourceId;
 use sources::registry::{RegistryPackage, RegistryDependency, INDEX_LOCK};
+use summary::Summary;
 use util::{CraftResult, ChainError, internal, Filesystem, Config};
 
 pub struct RegistryIndex<'cfg> {

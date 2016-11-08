@@ -1,11 +1,13 @@
 use std::collections::HashSet;
 
-use core::{PackageId, SourceId, Workspace};
+use ops;
+use package_id::PackageId;
+use package_id_spec::PackageIdSpec;
 use registry::PackageRegistry;
 use resolver::{self, Resolve, Method};
-use package_id_spec::PackageIdSpec;
-use ops;
+use source::SourceId;
 use util::CraftResult;
+use workspace::Workspace;
 
 /// Resolve all dependencies for the specified `package` using the previous
 /// lockfile as a guide if present.

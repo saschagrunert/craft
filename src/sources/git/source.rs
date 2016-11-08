@@ -2,15 +2,16 @@ use std::fmt::{self, Debug, Formatter};
 
 use url::Url;
 
-use source::{Source, SourceId};
-use core::GitReference;
-use core::{Package, PackageId, Dependency};
-use util::{CraftResult, Config};
-use util::hex::short_hash;
+use dependency::Dependency;
+use package::Package;
+use package_id::PackageId;
 use registry::Registry;
-use summary::Summary;
+use source::{Source, SourceId, GitReference};
 use sources::PathSource;
 use sources::git::utils::{GitRemote, GitRevision};
+use summary::Summary;
+use util::hex::short_hash;
+use util::{CraftResult, Config};
 
 pub struct GitSource<'cfg> {
     remote: GitRemote,

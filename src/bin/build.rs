@@ -1,6 +1,6 @@
 use std::env;
 
-use craft::core::Workspace;
+use craft::workspace::Workspace;
 use craft::ops::{self, CompileOptions, MessageFormat};
 use craft::util::important_paths::find_root_manifest_for_wd;
 use craft::util::{CliResult, Config};

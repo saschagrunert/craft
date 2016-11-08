@@ -3,7 +3,9 @@ use std::ffi::OsStr;
 use std::path::PathBuf;
 use semver::Version;
 
-use core::{PackageId, Package, Target};
+use manifest::Target;
+use package::Package;
+use package_id::PackageId;
 use util::{self, CraftResult, Config, ProcessBuilder, process, join_paths};
 
 /// A structure returning the result of a compilation.

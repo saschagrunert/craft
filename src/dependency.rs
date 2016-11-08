@@ -5,7 +5,8 @@ use std::str::FromStr;
 use semver::{ReqParseError, VersionReq};
 use rustc_serialize::{Encoder, Encodable};
 
-use core::{SourceId, PackageId};
+use package_id::PackageId;
+use source::SourceId;
 use summary::Summary;
 use util::{CraftError, CraftResult, Cfg, CfgExpr, ChainError, human, Config};
 

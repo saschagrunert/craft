@@ -1,14 +1,16 @@
 use std::collections::HashMap;
 
-use core::{Source, SourceId, SourceMap, Dependency, PackageId, Package};
-use core::PackageSet;
+use dependency::Dependency;
+use package::{Package, PackageSet};
+use package_id::PackageId;
+use source::{Source, SourceMap, SourceId};
+use sources::config::SourceConfigMap;
 use summary::Summary;
 use util::{CraftResult, ChainError, Config, human, profile};
-use sources::config::SourceConfigMap;
 
 /// Source of information about a group of packages.
 ///
-/// See also `core::Source`.
+/// See also `source::Source`.
 pub trait Registry {
     /// Attempt to find the packages that match a dependency request.
     fn query(&mut self, name: &Dependency) -> CraftResult<Vec<Summary>>;

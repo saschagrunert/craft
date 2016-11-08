@@ -9,7 +9,7 @@ use std::path::{Path, PathBuf};
 
 use url::Url;
 
-use core::{Source, SourceId};
+use source::{Source, SourceId};
 use sources::ReplacedSource;
 use util::{CraftResult, Config, ChainError, human, ToUrl};
 use util::config::ConfigValue;

@@ -5,8 +5,11 @@ use std::str::FromStr;
 use regex::Regex;
 use rustc_serialize::{Encodable, Encoder, Decodable, Decoder};
 
-use core::{Package, PackageId, SourceId, Workspace};
+use package::Package;
+use package_id::PackageId;
+use source::SourceId;
 use util::{CraftResult, Graph, Config, internal, ChainError, CraftError};
+use workspace::Workspace;
 
 use super::Resolve;
 

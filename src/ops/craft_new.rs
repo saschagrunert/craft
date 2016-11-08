@@ -3,14 +3,11 @@ use std::path::Path;
 use std::collections::BTreeMap;
 
 use rustc_serialize::{Decodable, Decoder};
-
 use git2::Config as GitConfig;
-
 use term::color::BLACK;
 
-use core::Workspace;
-use util::{GitRepo, HgRepo, CraftResult, human, ChainError, internal};
-use util::{Config, paths};
+use util::{GitRepo, HgRepo, CraftResult, human, ChainError, internal, Config, paths};
+use workspace::Workspace;
 
 use toml;
 

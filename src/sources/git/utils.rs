@@ -7,7 +7,7 @@ use rustc_serialize::{Encodable, Encoder};
 use url::Url;
 use git2::{self, ObjectType};
 
-use core::GitReference;
+use source::GitReference;
 use util::{CraftResult, ChainError, human, ToUrl, internal, Config, network};
 
 #[derive(PartialEq, Clone, Debug)]

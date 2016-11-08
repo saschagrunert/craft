@@ -2,7 +2,7 @@ use std::path::Path;
 
 use ops::{self, CompileFilter};
 use util::{self, CraftResult, ProcessError};
-use core::Workspace;
+use workspace::Workspace;
 
 pub fn run(ws: &Workspace, options: &ops::CompileOptions, args: &[String]) -> CraftResult<Option<ProcessError>> {
     let config = ws.config();

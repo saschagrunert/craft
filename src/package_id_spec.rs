@@ -4,7 +4,7 @@ use std::fmt;
 use semver::Version;
 use url::Url;
 
-use core::PackageId;
+use package_id::PackageId;
 use util::{CraftResult, ToUrl, human, ToSemver, ChainError};
 
 #[derive(Clone, PartialEq, Eq, Debug)]

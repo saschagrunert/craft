@@ -1,9 +1,11 @@
 use rustc_serialize::{Encodable, Encoder};
 
-use resolver::Resolve;
-use core::{Package, PackageId, Workspace};
 use ops;
+use package::Package;
+use package_id::PackageId;
+use resolver::Resolve;
 use util::CraftResult;
+use workspace::Workspace;
 
 const VERSION: u32 = 1;
 

@@ -45,13 +45,14 @@
 //!     .fingerprint/
 //! ```
 
-use std::fs;
-use std::io;
+use std::{fs, io};
 use std::path::{PathBuf, Path};
 
-use core::{Package, Workspace};
-use util::{Config, FileLock, CraftResult, Filesystem, human};
+use package::Package;
 use util::hex::short_hash;
+use util::{Config, FileLock, CraftResult, Filesystem, human};
+use workspace::Workspace;
+
 use super::Unit;
 
 pub struct Layout {

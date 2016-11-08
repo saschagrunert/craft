@@ -61,7 +61,7 @@ pub mod source;
 pub mod sources;
 pub mod summary;
 pub mod util;
-    mod workspace;
+pub mod workspace;
 
 pub fn execute_main_without_stdin<T, V>(exec: fn(T, &Config) -> CliResult<Option<V>>, options_first: bool, usage: &str)
     where V: Encodable,
