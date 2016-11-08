@@ -47,13 +47,12 @@ macro_rules! bail {
     )
 }
 
-pub mod core;
 pub mod dependency;
 pub mod manifest;
 pub mod ops;
 pub mod package;
 pub mod package_id;
-    mod package_id_spec;
+pub mod package_id_spec;
 pub mod registry;
 pub mod resolver;
 pub mod shell;
