@@ -112,9 +112,7 @@ fn check_metadata(pkg: &Package, config: &Config) -> CraftResult<()> {
         things.push_str(&missing.last().unwrap());
 
         try!(config.shell()
-            .warn(&format!("manifest has no {things}.\nSee http://doc.crates.io/manifest.html#package-metadata for \
-                            more info.",
-                           things = things)))
+            .warn(&format!("manifest has no {things}.", things = things)))
     }
     Ok(())
 }
@@ -216,10 +214,6 @@ fn tar(ws: &Workspace, src: &PathSource, dst: &File, filename: &str) -> CraftRes
         // with the bugfixed tar-rs library we'll be able to switch this over to
         // GNU archives, but for now we'll just say that you can't encode paths
         // in archives that are *too* long.
-        //
-        // For an instance of this in the wild, use the tar-rs 0.3.3 library to
-        // unpack the selectors 0.4.0 crate on crates.io. Either that or take a
-        // look at rust-lang/craft#2326
         let mut header = Header::new_ustar();
         let metadata = try!(file.metadata()
             .chain_error(|| human(format!("could not learn metadata for: `{}`", relative))));

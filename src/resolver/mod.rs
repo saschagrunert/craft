@@ -128,8 +128,7 @@ impl Resolve {
         //   were made
         //
         // In all of these cases, we want to report an error to indicate that
-        // something is awry. Normal execution (esp just using crates.io) should
-        // never run into this.
+        // something is awry. Normal execution should never run into this.
         for (id, cksum) in previous.checksums.iter() {
             if let Some(mine) = self.checksums.get(id) {
                 if mine == cksum {

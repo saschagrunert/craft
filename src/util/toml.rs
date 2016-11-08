@@ -14,7 +14,6 @@ use manifest::{EitherManifest, VirtualManifest, LibKind, Profile, ManifestMetada
 use package_id::{PackageId, Metadata};
 use package_id_spec::PackageIdSpec;
 use source::{GitReference, SourceId};
-use sources::CRATES_IO;
 use summary::Summary;
 use util::{self, CraftResult, human, ToUrl, ToSemver, ChainError, Config};
 use workspace::WorkspaceConfig;
@@ -738,31 +737,22 @@ impl TomlManifest {
     fn replace(&self, cx: &mut Context) -> CraftResult<Vec<(PackageIdSpec, Dependency)>> {
         let mut replace = Vec::new();
         for (spec, replacement) in self.replace.iter().flat_map(|x| x) {
-            let mut spec = try!(PackageIdSpec::parse(spec).chain_error(|| {
-                human(format!("replacements must specify a valid semver \
-                               version to replace, but `{}` does not",
-                              spec))
+            let spec = try!(PackageIdSpec::parse(spec).chain_error(|| {
+                human(format!("replacements must specify a valid semver version to replace, but `{}` does not", spec))
             }));
-            if spec.url().is_none() {
-                spec.set_url(CRATES_IO.parse().unwrap());
-            }
-
+            // Normally we could set a default crate url here
             let version_specified = match *replacement {
                 TomlDependency::Detailed(ref d) => d.version.is_some(),
                 TomlDependency::Simple(..) => true,
             };
             if version_specified {
-                bail!("replacements cannot specify a version \
-                       requirement, but found one for `{}`",
-                      spec);
+                bail!("replacements cannot specify a version requirement, but found one for `{}`", spec);
             }
 
             let dep = try!(replacement.to_dependency(spec.name(), cx, None));
             let dep = {
                 let version = try!(spec.version().chain_error(|| {
-                    human(format!("replacements must specify a version \
-                                   to replace, but `{}` does not",
-                                  spec))
+                    human(format!("replacements must specify a version to replace, but `{}` does not", spec))
                 }));
                 let req = VersionReq::exact(version);
                 dep.clone_inner()
@@ -878,7 +868,7 @@ impl TomlDependency {
                 }
             }
             (None, None) => {
-                // There is nothing like crates.io
+                // There is nothing like crates.io yet
                 cx.source_id.clone()
             }
         };

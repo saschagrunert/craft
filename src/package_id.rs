@@ -183,11 +183,7 @@ impl Metadata {
 impl fmt::Display for PackageId {
     fn fmt(&self, f: &mut Formatter) -> fmt::Result {
         try!(write!(f, "{} v{}", self.inner.name, self.inner.version));
-
-        if !self.inner.source_id.is_default_registry() {
-            try!(write!(f, " ({})", self.inner.source_id));
-        }
-
+        try!(write!(f, " ({})", self.inner.source_id));
         Ok(())
     }
 }

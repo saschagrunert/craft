@@ -11,7 +11,7 @@ use url::Url;
 use package::Package;
 use package_id::PackageId;
 use registry::Registry;
-use sources::{git, PathSource, GitSource, RegistrySource, CRATES_IO, DirectorySource};
+use sources::{git, PathSource, GitSource, RegistrySource, DirectorySource};
 use util::{human, Config, CraftResult, ToUrl};
 
 /// A Source finds and downloads remote packages based on names and versions.
@@ -266,14 +266,6 @@ impl SourceId {
 
     pub fn with_precise(&self, v: Option<String>) -> SourceId {
         SourceId { inner: Arc::new(SourceIdInner { precise: v, ..(*self.inner).clone() }) }
-    }
-
-    pub fn is_default_registry(&self) -> bool {
-        match self.inner.kind {
-            Kind::Registry => {}
-            _ => return false,
-        }
-        self.inner.url.to_string() == CRATES_IO
     }
 }
 

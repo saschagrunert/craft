@@ -175,7 +175,6 @@ use summary::Summary;
 use util::{CraftResult, Config, internal, ChainError, FileLock, Filesystem, hex};
 
 const INDEX_LOCK: &'static str = ".craft-index-lock";
-pub static CRATES_IO: &'static str = "https://github.com/rust-lang/crates.io-index";
 
 pub struct RegistrySource<'cfg> {
     source_id: SourceId,

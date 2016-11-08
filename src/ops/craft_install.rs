@@ -73,8 +73,7 @@ pub fn install(root: Option<&str>,
             .expect("path sources must have a valid path");
         let mut src = PathSource::new(&path, source_id, config);
         try!(src.update().chain_error(|| {
-            human(format!("`{}` is not a crate root; specify a crate to \
-                           install from crates.io, or use --path or --git to \
+            human(format!("`{}` is not a crate root; specify a crate to install, or use --path or --git to \
                            specify an alternate source",
                           path.display()))
         }));
@@ -89,8 +88,8 @@ pub fn install(root: Option<&str>,
                         krate,
                         vers,
                         &mut |_| {
-                            Err(human("must specify a crate to install from crates.io, or use --path or --git to \
-                                       specify alternate source"))
+                            Err(human("must specify a crate to install, or use --path or --git to specify alternate \
+                                       source"))
                         }))
     };
 
