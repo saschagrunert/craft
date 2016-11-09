@@ -4,7 +4,6 @@ use std::collections::BTreeMap;
 
 use rustc_serialize::{Decodable, Decoder};
 use git2::Config as GitConfig;
-use term::color::BLACK;
 
 use util::{GitRepo, HgRepo, CraftResult, human, ChainError, internal, Config, paths};
 use workspace::Workspace;
@@ -81,7 +80,7 @@ struct CraftNewConfig {
     version_control: Option<VersionControl>,
 }
 
-fn get_name<'a>(path: &'a Path, opts: &'a NewOptions, config: &Config) -> CraftResult<&'a str> {
+fn get_name<'a>(path: &'a Path, opts: &'a NewOptions) -> CraftResult<&'a str> {
     if let Some(name) = opts.name {
         return Ok(name);
     }
@@ -96,28 +95,16 @@ fn get_name<'a>(path: &'a Path, opts: &'a NewOptions, config: &Config) -> CraftR
                        path.file_name().unwrap()))
     }));
 
-    if opts.bin {
-        Ok(dir_name)
-    } else {
-        let new_name = strip_rust_affixes(dir_name);
-        if new_name != dir_name {
-            let message = format!("note: package will be named `{}`; use --name to override",
-                                  new_name);
-            try!(config.shell().say(&message, BLACK));
-        }
-        Ok(new_name)
-    }
+    Ok(dir_name)
 }
 
 fn check_name(name: &str) -> CraftResult<()> {
 
-    // Ban keywords + test list found at
-    // https://doc.rust-lang.org/grammar.html#keywords
-    let blacklist = ["abstract", "alignof", "as", "become", "box", "break", "const", "continue", "chest", "do",
-                     "else", "enum", "extern", "false", "final", "fn", "for", "if", "impl", "in", "let", "loop",
-                     "macro", "match", "mod", "move", "mut", "offsetof", "override", "priv", "proc", "pub", "pure",
-                     "ref", "return", "self", "sizeof", "static", "struct", "super", "test", "trait", "true", "type",
-                     "typeof", "unsafe", "unsized", "use", "virtual", "where", "while", "yield"];
+    // Ban keywords
+    let blacklist = ["chest", "test", "true", "auto", "break", "case", "char", "const", "continue", "default", "do",
+                     "double", "else", "enum", "extern", "float", "for", "goto", "if", "int", "long", "register",
+                     "return", "short", "signed", "sizeof", "static", "struct", "switch", "typedef", "union",
+                     "unsigned", "void", "volatile", "while"];
     if blacklist.contains(&name) {
         bail!("The name `{}` cannot be used as a chest name\n\
                use --name to override chest name",
@@ -158,12 +145,12 @@ fn detect_source_paths_and_types(project_path: &Path,
     }
 
     let tests = vec![
-        Test { proposed_path: format!("src/main.rs"),     handling: H::Bin },
-        Test { proposed_path: format!("main.rs"),         handling: H::Bin },
-        Test { proposed_path: format!("src/{}.rs", name), handling: H::Detect },
-        Test { proposed_path: format!("{}.rs", name),     handling: H::Detect },
-        Test { proposed_path: format!("src/lib.rs"),      handling: H::Lib },
-        Test { proposed_path: format!("lib.rs"),          handling: H::Lib },
+        Test { proposed_path: format!("src/main.c"),     handling: H::Bin },
+        Test { proposed_path: format!("main.c"),         handling: H::Bin },
+        Test { proposed_path: format!("src/{}.c", name), handling: H::Detect },
+        Test { proposed_path: format!("{}.c", name),     handling: H::Detect },
+        Test { proposed_path: format!("src/lib.c"),      handling: H::Lib },
+        Test { proposed_path: format!("lib.c"),          handling: H::Lib },
     ];
 
     for i in tests {
@@ -191,7 +178,7 @@ fn detect_source_paths_and_types(project_path: &Path,
             }
             H::Detect => {
                 let content = try!(paths::read(&path.join(pp.clone())));
-                let isbin = content.contains("fn main");
+                let isbin = content.contains("int main");
                 SourceFileInformation {
                     relative_path: pp,
                     target_name: project_name.to_string(),
@@ -203,7 +190,6 @@ fn detect_source_paths_and_types(project_path: &Path,
     }
 
     // Check for duplicate lib attempt
-
     let mut previous_lib_relpath: Option<&str> = None;
     let mut duplicates_checker: BTreeMap<&str, &SourceFileInformation> = BTreeMap::new();
 
@@ -221,9 +207,7 @@ cannot automatically generate Craft.toml as the main target would be ambiguous",
             duplicates_checker.insert(i.target_name.as_ref(), i);
         } else {
             if let Some(plp) = previous_lib_relpath {
-                return Err(human(format!("cannot have a project with \
-                                         multiple libraries, \
-                                         found both `{}` and `{}`",
+                return Err(human(format!("cannot have a project with multiple libraries, found both `{}` and `{}`",
                                          plp,
                                          i.relative_path)));
             }
@@ -237,13 +221,13 @@ cannot automatically generate Craft.toml as the main target would be ambiguous",
 fn plan_new_source_file(bin: bool, project_name: String) -> SourceFileInformation {
     if bin {
         SourceFileInformation {
-            relative_path: "src/main.rs".to_string(),
+            relative_path: "src/main.c".to_string(),
             target_name: project_name,
             bin: true,
         }
     } else {
         SourceFileInformation {
-            relative_path: "src/lib.rs".to_string(),
+            relative_path: "src/lib.c".to_string(),
             target_name: project_name,
             bin: false,
         }
@@ -260,7 +244,7 @@ pub fn new(opts: NewOptions, config: &Config) -> CraftResult<()> {
         bail!("can't specify both lib and binary outputs");
     }
 
-    let name = try!(get_name(&path, &opts, config));
+    let name = try!(get_name(&path, &opts));
     try!(check_name(name));
 
     let mkopts = MkOptions {
@@ -290,7 +274,7 @@ pub fn init(opts: NewOptions, config: &Config) -> CraftResult<()> {
         bail!("can't specify both lib and binary outputs");
     }
 
-    let name = try!(get_name(&path, &opts, config));
+    let name = try!(get_name(&path, &opts));
     try!(check_name(name));
 
     let mut src_paths_types = vec![];
@@ -300,7 +284,7 @@ pub fn init(opts: NewOptions, config: &Config) -> CraftResult<()> {
     if src_paths_types.len() == 0 {
         src_paths_types.push(plan_new_source_file(opts.bin, name.to_string()));
     } else {
-        // --bin option may be ignored if lib.rs or src/lib.rs present
+        // --bin option may be ignored if lib.c or src/lib.c present
         // Maybe when doing `craft init --bin` inside a library project stub,
         // user may mean "initialize for library, but also add binary target"
     }
@@ -323,10 +307,8 @@ pub fn init(opts: NewOptions, config: &Config) -> CraftResult<()> {
         // if none exists, maybe create git, like in `craft new`
 
         if num_detected_vsces > 1 {
-            bail!("both .git and .hg directories found \
-                              and the ignore file can't be \
-                              filled in as a result, \
-                              specify --vcs to override detection");
+            bail!("both .git and .hg directories found and the ignore file can't be filled in as a result, specify \
+                   --vcs to override detection");
         }
     }
 
@@ -343,20 +325,6 @@ pub fn init(opts: NewOptions, config: &Config) -> CraftResult<()> {
                       name,
                       path.display()))
     })
-}
-
-fn strip_rust_affixes(name: &str) -> &str {
-    for &prefix in &["rust-", "rust_", "rs-", "rs_"] {
-        if name.starts_with(prefix) {
-            return &name[prefix.len()..];
-        }
-    }
-    for &suffix in &["-rust", "_rust", "-rs", "_rs"] {
-        if name.ends_with(suffix) {
-            return &name[..name.len() - suffix.len()];
-        }
-    }
-    name
 }
 
 fn existing_vcs_repo(path: &Path, cwd: &Path) -> bool {
@@ -412,10 +380,9 @@ fn mk(config: &Config, opts: &MkOptions) -> CraftResult<()> {
     let mut crafttoml_path_specifier = String::new();
 
     // Calculare what [lib] and [[bin]]s do we need to append to Craft.toml
-
     for i in &opts.source_files {
         if i.bin {
-            if i.relative_path != "src/main.rs" {
+            if i.relative_path != "src/main.c" {
                 crafttoml_path_specifier.push_str(&format!(r#"
 [[bin]]
 name = "{}"
@@ -424,7 +391,7 @@ path = {}
                                                            i.target_name,
                                                            toml::Value::String(i.relative_path.clone())));
             }
-        } else if i.relative_path != "src/lib.rs" {
+        } else if i.relative_path != "src/lib.c" {
             crafttoml_path_specifier.push_str(&format!(r#"
 [lib]
 name = "{}"
@@ -464,19 +431,14 @@ authors = [{}]
 
         let default_file_content: &[u8] = if i.bin {
             b"\
-fn main() {
-    println!(\"Hello, world!\");
+#include <stdio.h>
+
+int main(void) {
+    printf!(\"Hello, world!\");
 }
 "
         } else {
-            b"\
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn it_works() {
-    }
-}
-"
+            b""
         };
 
         if !fs::metadata(&path_of_source_file).map(|x| x.is_file()).unwrap_or(false) {
@@ -485,8 +447,7 @@ mod tests {
     }
 
     if let Err(e) = Workspace::new(&path.join("Craft.toml"), config) {
-        let msg = format!("compiling this new chest may not work due to invalid \
-                           workspace configuration\n\n{}",
+        let msg = format!("compiling this new chest may not work due to invalid workspace configuration\n\n{}",
                           e);
         try!(config.shell().warn(msg));
     }
@@ -537,9 +498,8 @@ fn global_config(config: &Config) -> CraftResult<CraftNewConfig> {
         Some(("hg", _)) => Some(VersionControl::Hg),
         Some(("none", _)) => Some(VersionControl::NoVcs),
         Some((s, p)) => {
-            return Err(internal(format!("invalid configuration for key \
-                                         `craft-new.vcs`, unknown vcs `{}` \
-                                         (found in {})",
+            return Err(internal(format!("invalid configuration for key `craft-new.vcs`, unknown vcs `{}` (found in \
+                                         {})",
                                         s,
                                         p)))
         }
@@ -550,21 +510,4 @@ fn global_config(config: &Config) -> CraftResult<CraftNewConfig> {
         email: email,
         version_control: vcs,
     })
-}
-
-#[cfg(test)]
-mod tests {
-    use super::strip_rust_affixes;
-
-    #[test]
-    fn affixes_stripped() {
-        assert_eq!(strip_rust_affixes("rust-foo"), "foo");
-        assert_eq!(strip_rust_affixes("foo-rs"), "foo");
-        assert_eq!(strip_rust_affixes("rs_foo"), "foo");
-        // Only one affix is stripped
-        assert_eq!(strip_rust_affixes("rs-foo-rs"), "foo-rs");
-        assert_eq!(strip_rust_affixes("foo-rs-rs"), "foo-rs");
-        // It shouldn't touch the middle
-        assert_eq!(strip_rust_affixes("some-rust-chest"), "some-rust-chest");
-    }
 }

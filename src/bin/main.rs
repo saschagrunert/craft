@@ -55,7 +55,6 @@ Some common craft commands are (see all commands with --list):
     build               Compile the current project (alias: b)
     clean               Remove the target directory (alias: c)
     new                 Create a new craft project (alias: n)
-    init                Create a new craft project in an existing directory
     run                 Build and execute src/main.c (alias: r)
     test                Run the tests (alias: t)
     bench               Run the benchmarks
@@ -79,7 +78,6 @@ macro_rules! each_subcommand{
         $mac!(fetch);
         $mac!(generate_lockfile);
         $mac!(git_checkout);
-        $mac!(init);
         $mac!(locate_project);
         $mac!(metadata);
         $mac!(new);
