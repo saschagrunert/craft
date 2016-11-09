@@ -42,12 +42,12 @@ impl Layout {
         let mut tests = vec![];
         let mut benches = vec![];
 
-        let lib_canidate = root_path.join("src").join("lib.rs");
+        let lib_canidate = root_path.join("src").join("lib.c");
         if fs::metadata(&lib_canidate).is_ok() {
             lib = Some(lib_canidate);
         }
 
-        try_add_file(&mut bins, root_path.join("src").join("main.rs"));
+        try_add_file(&mut bins, root_path.join("src").join("main.c"));
         try_add_files(&mut bins, root_path.join("src").join("bin"));
 
         try_add_files(&mut examples, root_path.join("examples"));
@@ -68,7 +68,7 @@ impl Layout {
     fn main(&self) -> Option<&PathBuf> {
         self.bins.iter().find(|p| {
             match p.file_name().and_then(|s| s.to_str()) {
-                Some(s) => s == "main.rs",
+                Some(s) => s == "main.c",
                 None => false,
             }
         })
@@ -124,7 +124,7 @@ pub fn to_manifest(contents: &str,
             }
             if !manifest.targets().iter().any(|t| !t.is_custom_build()) {
                 bail!("no targets specified in the manifest\n  \
-                       either src/lib.rs, src/main.rs, a [lib] section, or \
+                       either src/lib.c, src/main.c, a [lib] section, or \
                        [[bin]] section must be present")
             }
             Ok((EitherManifest::Real(manifest), paths))
@@ -364,7 +364,7 @@ fn inferred_bin_targets(name: &str, layout: &Layout) -> Vec<TomlTarget> {
     layout.bins
         .iter()
         .filter_map(|bin| {
-            let name = if &**bin == Path::new("src/main.rs") || *bin == layout.root.join("src").join("main.rs") {
+            let name = if &**bin == Path::new("src/main.c") || *bin == layout.root.join("src").join("main.c") {
                 Some(name.to_string())
             } else {
                 bin.file_stem().and_then(|s| s.to_str()).map(|f| f.to_string())

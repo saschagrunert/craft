@@ -24,7 +24,7 @@ pub struct Options {
 }
 
 pub const USAGE: &'static str = "
-Run the main binary of the local package (src/main.rs)
+Run the main binary of the local package (src/main.c)
 
 Usage:
     craft run [options] [--] [<args>...]
