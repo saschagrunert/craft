@@ -52,7 +52,7 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
 
     fn update_index(&mut self) -> CraftResult<()> {
         // Ensure that we'll actually be able to acquire an HTTP handle later on
-        // once we start trying to download crates. This will weed out any
+        // once we start trying to download chests. This will weed out any
         // problems with `.craft/config` configuration related to HTTP.
         //
         // This way if there's a problem the error gets printed before we even
@@ -105,7 +105,7 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
     }
 
     fn download(&mut self, pkg: &PackageId, checksum: &str) -> CraftResult<FileLock> {
-        let filename = format!("{}-{}.crate", pkg.name(), pkg.version());
+        let filename = format!("{}-{}.chest", pkg.name(), pkg.version());
         let path = Path::new(&filename);
         let mut dst = try!(self.cache_path.open_rw(path, self.config, &filename));
         let meta = try!(dst.file().metadata());
@@ -160,7 +160,7 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
 }
 
 /// Updating the index is done pretty regularly so we want it to be as fast as
-/// possible. For registries hosted on github (like the crates.io index) there's
+/// possible. For registries hosted on github (like the chests.io index) there's
 /// a fast path available to use [1] to tell us that there's no updates to be
 /// made.
 ///

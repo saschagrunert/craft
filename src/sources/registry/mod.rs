@@ -4,7 +4,7 @@
 //!
 //! Registries are central locations where packages can be uploaded to,
 //! discovered, and searched for. The purpose of a registry is to have a
-//! location that serves as permanent storage for versions of a crate over time.
+//! location that serves as permanent storage for versions of a chest over time.
 //!
 //! Compared to git sources, a registry provides many packages as well as many
 //! versions simultaneously. Git sources can also have commits deleted through
@@ -58,10 +58,10 @@
 //! filesystem limits at some point. To this end, a few decisions were made
 //! about the format of the registry:
 //!
-//! 1. Each crate will have one file corresponding to it. Each version for a
-//!    crate will just be a line in this file.
-//! 2. There will be two tiers of directories for crate names, under which
-//!    crates corresponding to those tiers will be located.
+//! 1. Each chest will have one file corresponding to it. Each version for a
+//!    chest will just be a line in this file.
+//! 2. There will be two tiers of directories for chest names, under which
+//!    chests corresponding to those tiers will be located.
 //!
 //! As an example, this is an example hierarchy of an index:
 //!
@@ -87,22 +87,22 @@
 //! The root of the index contains a `config.json` file with a few entries
 //! corresponding to the registry (see `RegistryConfig` below).
 //!
-//! Otherwise, there are three numbered directories (1, 2, 3) for crates with
+//! Otherwise, there are three numbered directories (1, 2, 3) for chests with
 //! names 1, 2, and 3 characters in length. The 1/2 directories simply have the
-//! crate files underneath them, while the 3 directory is sharded by the first
-//! letter of the crate name.
+//! chest files underneath them, while the 3 directory is sharded by the first
+//! letter of the chest name.
 //!
 //! Otherwise the top-level directory contains many two-letter directory names,
 //! each of which has many sub-folders with two letters. At the end of all these
-//! are the actual crate files themselves.
+//! are the actual chest files themselves.
 //!
 //! The purpose of this layout is to hopefully cut down on `ls` sizes as well as
-//! efficient lookup based on the crate name itself.
+//! efficient lookup based on the chest name itself.
 //!
-//! ## Crate files
+//! ## Chest files
 //!
-//! Each file in the index is the history of one crate over time. Each line in
-//! the file corresponds to one version of a crate, stored in JSON format (see
+//! Each file in the index is the history of one chest over time. Each line in
+//! the file corresponds to one version of a chest, stored in JSON format (see
 //! the `RegistryPackage` structure below).
 //!
 //! As new versions are published, new lines are appended to this file. The only
@@ -147,7 +147,7 @@
 //!     # This folder is a cache for all downloaded tarballs from a registry.
 //!     # Once downloaded and verified, a tarball never changes.
 //!     cache/
-//!         registry1-<hash>/<pkg>-<version>.crate
+//!         registry1-<hash>/<pkg>-<version>.chest
 //!         ...
 //!
 //!     # Location in which all tarballs are unpacked. Each tarball is known to
@@ -188,13 +188,13 @@ pub struct RegistrySource<'cfg> {
 
 #[derive(RustcDecodable)]
 pub struct RegistryConfig {
-    /// Download endpoint for all crates. This will be appended with
-    /// `/<crate>/<version>/download` and then will be hit with an HTTP GET
-    /// request to download the tarball for a crate.
+    /// Download endpoint for all chests. This will be appended with
+    /// `/<chest>/<version>/download` and then will be hit with an HTTP GET
+    /// request to download the tarball for a chest.
     pub dl: String,
 
     /// API endpoint for the registry. This is what's actually hit to perform
-    /// operations like yanks, owner modifications, publish new crates, etc.
+    /// operations like yanks, owner modifications, publish new chests, etc.
     pub api: String,
 }
 

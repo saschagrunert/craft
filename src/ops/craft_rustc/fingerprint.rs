@@ -57,7 +57,7 @@ pub fn prepare_target<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> 
     log_compare(unit, &compare);
 
     // If our comparison failed (e.g. we're going to trigger a rebuild of this
-    // crate), then we also ensure the source of the crate passes all
+    // chest), then we also ensure the source of the chest passes all
     // verification checks before we build it.
     //
     // The `Source::verify` method is intended to allow sources to execute
@@ -76,7 +76,7 @@ pub fn prepare_target<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> 
     let root = cx.out_dir(unit);
     let mut missing_outputs = false;
     if unit.profile.doc {
-        missing_outputs = !root.join(unit.target.crate_name())
+        missing_outputs = !root.join(unit.target.chest_name())
             .join("index.html")
             .exists();
     } else {
@@ -109,13 +109,13 @@ pub fn prepare_target<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> 
 ///
 /// Path sources, for example, use the mtime of the corresponding dep-info file
 /// as a fingerprint (all source files must be modified *before* this mtime).
-/// This dep-info file is not generated, however, until after the crate is
+/// This dep-info file is not generated, however, until after the chest is
 /// compiled. As a result, this structure can be thought of as a fingerprint
 /// to-be. The actual value can be calculated via `hash()`, but the operation
 /// may fail as some files may not have been generated.
 ///
 /// Note that dependencies are taken into account for fingerprints because rustc
-/// requires that whenever an upstream crate is recompiled that all downstream
+/// requires that whenever an upstream chest is recompiled that all downstream
 /// dependants are also recompiled. This is typically tracked through
 /// `DependencyQueue`, but it also needs to be retained here because Craft can
 /// be interrupted while executing, losing the state of the `DependencyQueue`

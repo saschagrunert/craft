@@ -109,7 +109,7 @@ impl<'cfg> Compilation<'cfg> {
                         let mut parts = s.splitn(2, '=');
                         match (parts.next(), parts.next()) {
                             (Some("native"), Some(path)) |
-                            (Some("crate"), Some(path)) |
+                            (Some("chest"), Some(path)) |
                             (Some("dependency"), Some(path)) |
                             (Some("framework"), Some(path)) |
                             (Some("all"), Some(path)) => path.into(),

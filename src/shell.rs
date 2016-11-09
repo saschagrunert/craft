@@ -111,13 +111,13 @@ impl MultiShell {
     }
 
     pub fn error<T: fmt::Display>(&mut self, message: T) -> CraftResult<()> {
-        self.err().say_status("[ERR!]", message, BRIGHT_RED)
+        self.err().say_status("[Error]", message, BRIGHT_RED)
     }
 
     pub fn warn<T: fmt::Display>(&mut self, message: T) -> CraftResult<()> {
         match self.verbosity {
             Quiet => Ok(()),
-            _ => self.err().say_status("[WARN]", message, BRIGHT_YELLOW),
+            _ => self.err().say_status("[Warning]", message, BRIGHT_YELLOW),
         }
     }
 

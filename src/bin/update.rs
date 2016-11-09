@@ -29,7 +29,7 @@ Options:
     -p SPEC, --package SPEC ...  Package to update
     --aggressive                 Force updating all dependencies of <name> as well
     --precise PRECISE            Update a single dependency to exactly PRECISE
-    --manifest-path PATH         Path to the crate's manifest
+    --manifest-path PATH         Path to the chest's manifest
     -v, --verbose ...            Use verbose output
     -q, --quiet                  No output printed to stdout
     --color WHEN                 Coloring: auto, always, never

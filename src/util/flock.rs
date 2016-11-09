@@ -238,7 +238,7 @@ impl Filesystem {
 ///
 /// This function will acquire the lock on a `path`, printing out a nice message
 /// to the console if we have to wait for it. It will first attempt to use `try`
-/// to acquire a lock on the crate, and in the case of contention it will emit a
+/// to acquire a lock on the chest, and in the case of contention it will emit a
 /// status message based on `msg` to `config`'s shell, and then use `block` to
 /// block waiting to acquire a lock.
 ///

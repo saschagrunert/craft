@@ -166,7 +166,7 @@ impl<'cfg> Registry for RegistryIndex<'cfg> {
 
         // Handle `craft update --precise` here. If specified, our own source
         // will have a precise version listed of the form `<pkg>=<req>` where
-        // `<pkg>` is the name of a crate on this source and `<req>` is the
+        // `<pkg>` is the name of a chest on this source and `<req>` is the
         // version requested (agument to `--precise`).
         summaries.retain(|s| {
             match self.source_id.precise() {

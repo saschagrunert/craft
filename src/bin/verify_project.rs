@@ -21,7 +21,7 @@ pub struct Flags {
 }
 
 pub const USAGE: &'static str = "
-Check correctness of crate manifest
+Check correctness of chest manifest
 
 Usage:
     craft verify-project [options]

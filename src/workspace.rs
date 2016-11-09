@@ -13,7 +13,7 @@ use source::SourceId;
 use util::paths;
 use util::{Config, CraftResult, Filesystem, human};
 
-/// The core abstraction in Craft for working with a workspace of crates.
+/// The core abstraction in Craft for working with a workspace of chests.
 ///
 /// A workspace is often created very early on and then threaded through all other functions. It's
 /// typically through this object that the current package is loaded and/or learned about.
@@ -21,7 +21,7 @@ pub struct Workspace<'cfg> {
     config: &'cfg Config,
 
     // This path is a path to where the current craft subcommand was invoked from. That is, this is
-    // the `--manifest-path` argument to Craft, and points to the "main crate" that we're going to
+    // the `--manifest-path` argument to Craft, and points to the "main chest" that we're going to
     // worry about.
     current_manifest: PathBuf,
 
@@ -29,7 +29,7 @@ pub struct Workspace<'cfg> {
     // by `current_manifest`.
     packages: Packages<'cfg>,
 
-    // If this workspace includes more than one crate, this points to the root of the workspace.
+    // If this workspace includes more than one chest, this points to the root of the workspace.
     // This is `None` in the case that `[workspace]` is missing, `package.workspace` is missing,
     // and no `Craft.toml` above `current_manifest` was found on the filesystem with `[workspace]`.
     root_manifest: Option<PathBuf>,
@@ -184,7 +184,7 @@ impl<'cfg> Workspace<'cfg> {
 
     /// Returns the root [replace] section of this workspace.
     ///
-    /// This may be from a virtual crate or an actual crate.
+    /// This may be from a virtual chest or an actual chest.
     pub fn root_replace(&self) -> &[(PackageIdSpec, Dependency)] {
         let path = match self.root_manifest {
             Some(ref p) => p,
@@ -204,7 +204,7 @@ impl<'cfg> Workspace<'cfg> {
         }
     }
 
-    /// Finds the root of a workspace for the crate whose manifest is located at `manifest_path`.
+    /// Finds the root of a workspace for the chest whose manifest is located at `manifest_path`.
     ///
     /// This will parse the `Craft.toml` at `manifest_path` and then interpret the workspace
     /// configuration, optionally walking up the filesystem looking for other workspace roots.
@@ -317,7 +317,7 @@ impl<'cfg> Workspace<'cfg> {
     ///
     /// 1. A workspace only has one root.
     /// 2. All workspace members agree on this one root as the root.
-    /// 3. The current crate is a member of this workspace.
+    /// 3. The current chest is a member of this workspace.
     fn validate(&mut self) -> CraftResult<()> {
         if self.root_manifest.is_none() {
             return Ok(());
@@ -351,7 +351,7 @@ impl<'cfg> Workspace<'cfg> {
 
         match roots.len() {
             0 => {
-                bail!("`package.workspace` configuration points to a crate \
+                bail!("`package.workspace` configuration points to a chest \
                        which is not configured with [workspace]: \n\
                        configuration at: {}\n\
                        points to: {}",
@@ -420,7 +420,7 @@ impl<'cfg> Workspace<'cfg> {
                     };
                     if members.is_none() {
                         format!("this may be fixable by ensuring that this \
-                                 crate is depended on by the workspace \
+                                 chest is depended on by the workspace \
                                  root: {}",
                                 root.display())
                     } else {

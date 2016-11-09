@@ -1,4 +1,4 @@
-//! # Cargo inspired build system for C based projects
+//! Cargo inspired build system for C based projects
 #![doc(html_root_url = "https://saschagrunert.github.io/craft/")]
 // #![deny(missing_docs)]
 #![deny(unused)]

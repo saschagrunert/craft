@@ -23,8 +23,8 @@ pub struct SourceConfigMap<'cfg> {
 /// Configuration for a particular source, found in TOML looking like:
 ///
 /// ```toml
-/// [source.crates-io]
-/// registry = 'https://github.com/rust-lang/crates.io-index'
+/// [source.chests-io]
+/// registry = 'https://github.com/rust-lang/chests.io-index'
 /// replace-with = 'foo'    # optional
 /// ```
 struct SourceConfig {

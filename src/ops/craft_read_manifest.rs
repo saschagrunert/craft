@@ -145,7 +145,7 @@ fn read_nested_packages(path: &Path,
     // they're all translated to actual registry dependencies.
     //
     // We normalize the path here ensure that we don't infinitely walk around
-    // looking for crates. By normalizing we ensure that we visit this crate at
+    // looking for chests. By normalizing we ensure that we visit this chest at
     // most once.
     //
     // TODO: filesystem/symlink implications?

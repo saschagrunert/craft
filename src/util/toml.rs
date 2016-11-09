@@ -452,7 +452,7 @@ impl TomlManifest {
         let lib = match self.lib {
             Some(ref lib) => {
                 try!(lib.validate_library_name());
-                try!(lib.validate_crate_type());
+                try!(lib.validate_chest_type());
                 Some(TomlTarget {
                     name: lib.name.clone().or(Some(project.name.clone())),
                     path: lib.path.clone().or(layout.lib.as_ref().map(|p| PathValue::Path(p.clone()))),
@@ -742,7 +742,7 @@ impl TomlManifest {
                 human(format!("replacements must specify a valid semver version to replace, but `{}` does not",
                               spec))
             }));
-            // Normally we could set a default crate url here
+            // Normally we could set a default chest url here
             let version_specified = match *replacement {
                 TomlDependency::Detailed(ref d) => d.version.is_some(),
                 TomlDependency::Simple(..) => true,
@@ -872,7 +872,7 @@ impl TomlDependency {
                 }
             }
             (None, None) => {
-                // There is nothing like crates.io yet
+                // There is nothing like chests.io yet
                 cx.source_id.clone()
             }
         };
@@ -896,7 +896,7 @@ impl TomlDependency {
 #[derive(RustcDecodable, Debug, Clone)]
 struct TomlTarget {
     name: Option<String>,
-    crate_type: Option<Vec<String>>,
+    chest_type: Option<Vec<String>>,
     path: Option<PathValue>,
     test: Option<bool>,
     doctest: Option<bool>,
@@ -925,7 +925,7 @@ impl TomlTarget {
     fn new() -> TomlTarget {
         TomlTarget {
             name: None,
-            crate_type: None,
+            chest_type: None,
             path: None,
             test: None,
             doctest: None,
@@ -1011,15 +1011,15 @@ impl TomlTarget {
         }
     }
 
-    fn validate_crate_type(&self) -> CraftResult<()> {
+    fn validate_chest_type(&self) -> CraftResult<()> {
         // Per the Macros 1.1 RFC:
         //
-        // > Initially if a crate is compiled with the proc-macro crate type
+        // > Initially if a chest is compiled with the proc-macro chest type
         // > (and possibly others) it will forbid exporting any items in the
-        // > crate other than those functions tagged #[proc_macro_derive] and
-        // > those functions must also be placed at the crate root.
+        // > chest other than those functions tagged #[proc_macro_derive] and
+        // > those functions must also be placed at the chest root.
         //
-        // A plugin requires exporting plugin_registrar so a crate cannot be
+        // A plugin requires exporting plugin_registrar so a chest cannot be
         // both at once.
         if self.plugin == Some(true) && self.proc_macro == Some(true) {
             Err(human("lib.plugin and lib.proc-macro cannot both be true".to_string()))
@@ -1071,7 +1071,7 @@ fn normalize(lib: &Option<TomlLibTarget>,
 
     fn lib_target(dst: &mut Vec<Target>, l: &TomlLibTarget, metadata: &Metadata) {
         let path = l.path.clone().unwrap_or(PathValue::Path(Path::new("src").join(&format!("{}.rs", l.name()))));
-        let crate_types = match l.crate_type.clone() {
+        let chest_types = match l.chest_type.clone() {
             Some(kinds) => kinds.iter().map(|s| LibKind::from_str(s)).collect(),
             None => {
                 vec![if l.plugin == Some(true) {
@@ -1084,12 +1084,12 @@ fn normalize(lib: &Option<TomlLibTarget>,
             }
         };
 
-        // Binaries, examples, etc, may link to this library. Their crate names
+        // Binaries, examples, etc, may link to this library. Their chest names
         // have a high likelihood to being the same as ours, however, so we need
         // some extra metadata in our name to ensure symbols won't collide.
         let mut metadata = metadata.clone();
         metadata.mix(&"lib");
-        let mut target = Target::lib_target(&l.name(), crate_types, &path.to_path(), metadata);
+        let mut target = Target::lib_target(&l.name(), chest_types, &path.to_path(), metadata);
         configure(l, &mut target);
         dst.push(target);
     }

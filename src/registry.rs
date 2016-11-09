@@ -305,7 +305,7 @@ impl<'cfg> PackageRegistry<'cfg> {
 
         let boilerplate = "\
 This is currently allowed but is known to produce buggy behavior with spurious
-recompiles and changes to the crate graph. Path overrides unfortunately were
+recompiles and changes to the chest graph. Path overrides unfortunately were
 never intended to support this feature, so for now this message is just a
 warning. In the future, however, this message will become a hard error.
 
@@ -320,7 +320,7 @@ documented online at the url below for more information.
                 continue;
             }
             let msg = format!("\
-                path override for crate `{}` has altered the original list of\n\
+                path override for chest `{}` has altered the original list of\n\
                 dependencies; the dependency on `{}` was either added or\n\
                 modified to not match the previously resolved version\n\n\
                 {}",
@@ -333,7 +333,7 @@ documented online at the url below for more information.
 
         for id in real_deps {
             let msg = format!("\
-                path override for crate `{}` has altered the original list of
+                path override for chest `{}` has altered the original list of
                 dependencies; the dependency on `{}` was removed\n\n
                 {}",
                               override_summary.package_id().name(),

@@ -38,7 +38,7 @@ pub trait Source: Registry {
     /// If this source supports it, verifies the source of the package specified.
     ///
     /// Note that the source may also have performed other checksum-based verification during the
-    /// `download` step, but this is intended to be run just before a crate is compiled so it may
+    /// `download` step, but this is intended to be run just before a chest is compiled so it may
     /// perform more expensive checks which may not be cacheable.
     fn verify(&self, _pkg: &PackageId) -> CraftResult<()> {
         Ok(())
@@ -370,7 +370,7 @@ impl Ord for SourceIdInner {
 
 // The hash of SourceId is used in the name of some Craft folders, so shouldn't vary. `as_str`
 // gives the serialisation of a url (which has a spec) and so insulates against possible changes in
-// how the url crate does hashing.
+// how the url chest does hashing.
 impl hash::Hash for SourceId {
     fn hash<S: hash::Hasher>(&self, into: &mut S) {
         self.inner.kind.hash(into);

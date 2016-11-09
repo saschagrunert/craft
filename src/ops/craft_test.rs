@@ -113,17 +113,17 @@ fn run_doc_tests(options: &TestOptions,
          package.targets()
             .iter()
             .filter(|t| t.doctested())
-            .map(|t| (t.src_path(), t.name(), t.crate_name())))
+            .map(|t| (t.src_path(), t.name(), t.chest_name())))
     });
 
     for (package, tests) in libs {
-        for (lib, name, crate_name) in tests {
+        for (lib, name, chest_name) in tests {
             try!(config.shell().status("Doc-tests", name));
             let mut p = try!(compilation.rustdoc_process(package));
             p.arg("--test")
                 .arg(lib)
                 .arg("--crate-name")
-                .arg(&crate_name);
+                .arg(&chest_name);
 
             for &rust_dep in &[&compilation.deps_output] {
                 let mut arg = OsString::from("dependency=");
@@ -159,7 +159,7 @@ fn run_doc_tests(options: &TestOptions,
                     if lib.extension() != Some(OsStr::new("rlib")) && !target.for_host() {
                         continue;
                     }
-                    let mut arg = OsString::from(target.crate_name());
+                    let mut arg = OsString::from(target.chest_name());
                     arg.push("=");
                     arg.push(lib);
                     p.arg("--extern").arg(&arg);

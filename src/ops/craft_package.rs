@@ -54,7 +54,7 @@ pub fn package(ws: &Workspace, opts: &PackageOpts) -> CraftResult<Option<FileLoc
         try!(check_not_dirty(&pkg, &src));
     }
 
-    let filename = format!("{}-{}.crate", pkg.name(), pkg.version());
+    let filename = format!("{}-{}.chest", pkg.name(), pkg.version());
     let dir = ws.target_dir().join("package");
     let mut dst = {
         let tmp = format!(".{}", filename);

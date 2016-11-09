@@ -4,14 +4,17 @@ extern crate url;
 extern crate env_logger;
 extern crate git2_curl;
 extern crate rustc_serialize;
+extern crate term;
 extern crate toml;
 
 #[macro_use]
 extern crate log;
 
-use std::{env, fs};
+use std::{env, fs, iter};
 use std::path::{Path, PathBuf};
 use std::collections::{BTreeSet, HashMap};
+
+use term::color::BLACK;
 
 use craft::shell::Verbosity;
 use craft::execute_main_without_stdin;
@@ -49,16 +52,18 @@ Options:
     --locked            Require Craft.lock is up to date
 
 Some common craft commands are (see all commands with --list):
-    build       Compile the current project
-    clean       Remove the target directory
-    new         Create a new craft project
-    init        Create a new craft project in an existing directory
-    run         Build and execute src/main.c
-    test        Run the tests
-    bench       Run the benchmarks
-    update      Update dependencies listed in Craft.lock
+    build               Compile the current project (alias: b)
+    clean               Remove the target directory (alias: c)
+    new                 Create a new craft project (alias: n)
+    init                Create a new craft project in an existing directory
+    run                 Build and execute src/main.c (alias: r)
+    test                Run the tests (alias: t)
+    bench               Run the benchmarks
+    update              Update dependencies listed in Craft.lock
 
 See 'craft help <command>' for more information on a specific command.
+
+More info at: https://github.com/saschagrunert/craft
 ";
 
 fn main() {
@@ -101,15 +106,18 @@ fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
     init_git_transports(config);
     let _token = craft::util::job::setup();
 
+    // Show the version if necessary
     if flags.flag_version {
-        println!("{}", craft::version());
+        try!(config.shell().say(craft::version(), BLACK));
         return Ok(None);
     }
 
+    // List available commands
     if flags.flag_list {
-        println!("Installed Commands:");
+        try!(config.shell().say("Available commands:", BLACK));
         for command in list_commands(config) {
-            println!("    {}", command);
+            try!(config.shell().say(iter::repeat(' ').take(4).collect::<String>() + &command,
+                                    BLACK));
         }
         return Ok(None);
     }
@@ -139,8 +147,10 @@ fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
         _ => {
             let mut default_alias = HashMap::new();
             default_alias.insert("b", "build".to_string());
-            default_alias.insert("t", "test".to_string());
+            default_alias.insert("c", "clean".to_string());
+            default_alias.insert("n", "new".to_string());
             default_alias.insert("r", "run".to_string());
+            default_alias.insert("t", "test".to_string());
             let mut args: Vec<String> = env::args().collect();
             if let Some(new_command) = default_alias.get(&args[1][..]) {
                 args[1] = new_command.clone();

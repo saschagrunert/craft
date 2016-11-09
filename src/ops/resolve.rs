@@ -95,7 +95,7 @@ pub fn resolve_with_previous<'a>(registry: &mut PackageRegistry,
 
         // If we're resolving everything then we include all members of the
         // workspace. If we want a specific set of requirements and we're
-        // compiling only a single workspace crate then resolve only it. This
+        // compiling only a single workspace chest then resolve only it. This
         // case should only happen after we have a previous resolution, however,
         // so assert that the previous exists.
         if let Method::Required { .. } = method {

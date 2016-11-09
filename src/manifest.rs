@@ -81,8 +81,8 @@ impl LibKind {
         }
     }
 
-    /// Returns the argument suitable for `--crate-type` to pass to rustc.
-    pub fn crate_type(&self) -> &str {
+    /// Returns the argument suitable for `--chest-type` to pass to rustc.
+    pub fn chest_type(&self) -> &str {
         match *self {
             LibKind::Lib => "lib",
             LibKind::Rlib => "rlib",
@@ -113,7 +113,7 @@ pub enum TargetKind {
 impl Encodable for TargetKind {
     fn encode<S: Encoder>(&self, s: &mut S) -> Result<(), S::Error> {
         match *self {
-                TargetKind::Lib(ref kinds) => kinds.iter().map(|k| k.crate_type()).collect(),
+                TargetKind::Lib(ref kinds) => kinds.iter().map(|k| k.chest_type()).collect(),
                 TargetKind::Bin => vec!["bin"],
                 TargetKind::Example => vec!["example"],
                 TargetKind::Test => vec!["test"],
@@ -327,9 +327,9 @@ impl Target {
         }
     }
 
-    pub fn lib_target(name: &str, crate_targets: Vec<LibKind>, src_path: &Path, metadata: Metadata) -> Target {
+    pub fn lib_target(name: &str, chest_targets: Vec<LibKind>, src_path: &Path, metadata: Metadata) -> Target {
         Target {
-            kind: TargetKind::Lib(crate_targets),
+            kind: TargetKind::Lib(chest_targets),
             name: name.to_string(),
             src_path: src_path.to_path_buf(),
             metadata: Some(metadata),
@@ -400,7 +400,7 @@ impl Target {
         &self.name
     }
 
-    pub fn crate_name(&self) -> String {
+    pub fn chest_name(&self) -> String {
         self.name.replace("-", "_")
     }
 
@@ -479,9 +479,9 @@ impl Target {
     }
 
     /// Returns the arguments suitable for `--crate-type` to pass to rustc.
-    pub fn rustc_crate_types(&self) -> Vec<&str> {
+    pub fn rustc_chest_types(&self) -> Vec<&str> {
         match self.kind {
-            TargetKind::Lib(ref kinds) => kinds.iter().map(|kind| kind.crate_type()).collect(),
+            TargetKind::Lib(ref kinds) => kinds.iter().map(|kind| kind.chest_type()).collect(),
             TargetKind::CustomBuild | TargetKind::Bench | TargetKind::Test | TargetKind::Example | TargetKind::Bin => {
                 vec!["bin"]
             }

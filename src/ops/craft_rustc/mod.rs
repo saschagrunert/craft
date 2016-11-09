@@ -221,8 +221,8 @@ fn compile<'a, 'cfg: 'a>(cx: &mut Context<'a, 'cfg>, jobs: &mut JobQueue<'a>, un
 }
 
 fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
-    let crate_types = unit.target.rustc_crate_types();
-    let mut rustc = try!(prepare_rustc(cx, crate_types, unit));
+    let chest_types = unit.target.rustc_chest_types();
+    let mut rustc = try!(prepare_rustc(cx, chest_types, unit));
 
     let name = unit.pkg.name().to_string();
     if !cx.show_warnings(unit.pkg.package_id()) {
@@ -247,11 +247,11 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
     let pass_l_flag = unit.target.is_lib() || !unit.pkg.targets().iter().any(|t| t.is_lib());
     let do_rename = unit.target.allows_underscores() && !unit.profile.test;
     let real_name = unit.target.name().to_string();
-    let crate_name = unit.target.crate_name();
+    let chest_name = unit.target.chest_name();
     let move_outputs_up = unit.pkg.package_id() == &cx.current_package;
 
     let rustc_dep_info_loc = if do_rename {
-            root.join(&crate_name)
+            root.join(&chest_name)
         } else {
             root.join(&cx.file_stem(unit))
         }
@@ -309,15 +309,15 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
             }
             .chain_error(|| human(format!("Could not compile `{}`.", name))));
 
-        if do_rename && real_name != crate_name {
+        if do_rename && real_name != chest_name {
             let dst = root.join(&filenames[0].0);
             let src = dst.with_file_name(dst.file_name()
                 .unwrap()
                 .to_str()
                 .unwrap()
-                .replace(&real_name, &crate_name));
+                .replace(&real_name, &chest_name));
             if !has_custom_args || src.exists() {
-                try!(fs::rename(&src, &dst).chain_error(|| internal(format!("could not rename crate {:?}", src))));
+                try!(fs::rename(&src, &dst).chain_error(|| internal(format!("could not rename chest {:?}", src))));
             }
         }
 
@@ -327,7 +327,7 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
             try!(fingerprint::append_current_dir(&dep_info_loc, &cwd));
         }
 
-        // If we're a "root crate", e.g. the target of this compilation, then we
+        // If we're a "root chest", e.g. the target of this compilation, then we
         // hard link our outputs out of the `deps` directory into the directory
         // above. This means that `craft build` will produce binaries in
         // `target/debug` which one probably expects.
@@ -422,9 +422,9 @@ fn add_plugin_deps(rustc: &mut ProcessBuilder,
     Ok(())
 }
 
-fn prepare_rustc(cx: &Context, crate_types: Vec<&str>, unit: &Unit) -> CraftResult<ProcessBuilder> {
+fn prepare_rustc(cx: &Context, chest_types: Vec<&str>, unit: &Unit) -> CraftResult<ProcessBuilder> {
     let mut base = try!(cx.compilation.rustc_process(unit.pkg));
-    build_base_args(cx, &mut base, unit, &crate_types);
+    build_base_args(cx, &mut base, unit, &chest_types);
     build_plugin_args(&mut base, cx, unit);
     try!(build_deps_args(&mut base, cx, unit));
     Ok(base)
@@ -436,7 +436,7 @@ fn rustdoc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
     rustdoc.arg(&root_path(cx, unit))
         .cwd(cx.config.cwd())
         .arg("--crate-name")
-        .arg(&unit.target.crate_name());
+        .arg(&unit.target.chest_name());
 
     if unit.kind != Kind::Host {
         if let Some(target) = cx.requested_target() {
@@ -507,7 +507,7 @@ fn root_path(cx: &Context, unit: &Unit) -> PathBuf {
     }
 }
 
-fn build_base_args(cx: &Context, cmd: &mut ProcessBuilder, unit: &Unit, crate_types: &[&str]) {
+fn build_base_args(cx: &Context, cmd: &mut ProcessBuilder, unit: &Unit, chest_types: &[&str]) {
     let Profile { ref opt_level,
                   lto,
                   codegen_units,
@@ -536,16 +536,16 @@ fn build_base_args(cx: &Context, cmd: &mut ProcessBuilder, unit: &Unit, crate_ty
         cmd.arg("--error-format").arg("json");
     }
 
-    cmd.arg("--crate-name").arg(&unit.target.crate_name());
+    cmd.arg("--crate-name").arg(&unit.target.chest_name());
 
     if !test {
-        for crate_type in crate_types.iter() {
-            cmd.arg("--crate-type").arg(crate_type);
+        for chest_type in chest_types.iter() {
+            cmd.arg("--crate-type").arg(chest_type);
         }
     }
 
     let prefer_dynamic = (unit.target.for_host() && !unit.target.is_custom_build()) ||
-                         (crate_types.contains(&"dylib") && unit.pkg.package_id() != &cx.current_package);
+                         (chest_types.contains(&"dylib") && unit.pkg.package_id() != &cx.current_package);
     if prefer_dynamic {
         cmd.arg("-C").arg("prefer-dynamic");
     }
@@ -560,7 +560,7 @@ fn build_base_args(cx: &Context, cmd: &mut ProcessBuilder, unit: &Unit, crate_ty
     // If we're used in a plugin then we'll eventually be linked to libsyntax
     // most likely which isn't compiled with a custom panic mode, so we'll just
     // get an error if we actually compile with that. This fixes `panic=abort`
-    // crates which have plugin dependencies, but unfortunately means that
+    // chests which have plugin dependencies, but unfortunately means that
     // dependencies shared between the main application and plugins must be
     // compiled without `panic=abort`. This isn't so bad, though, as the main
     // application will still be compiled with `panic=abort`.
@@ -676,7 +676,7 @@ fn build_deps_args(cmd: &mut ProcessBuilder, cx: &Context, unit: &Unit) -> Craft
                 continue;
             }
             let mut v = OsString::new();
-            v.push(&unit.target.crate_name());
+            v.push(&unit.target.chest_name());
             v.push("=");
             v.push(cx.out_dir(unit));
             v.push(&path::MAIN_SEPARATOR.to_string());

@@ -21,9 +21,9 @@ pub fn doc(ws: &Workspace, options: &DocOptions) -> CraftResult<()> {
     if options.compile_opts.spec.is_empty() {
         for target in package.targets().iter().filter(|t| t.documented()) {
             if target.is_lib() {
-                assert!(lib_names.insert(target.crate_name()));
+                assert!(lib_names.insert(target.chest_name()));
             } else {
-                assert!(bin_names.insert(target.crate_name()));
+                assert!(bin_names.insert(target.chest_name()));
             }
         }
         for bin in bin_names.iter() {

@@ -52,7 +52,7 @@ pub struct Context<'a, 'cfg: 'a> {
 
 #[derive(Clone, Default)]
 struct TargetInfo {
-    crate_types: HashMap<String, Option<(String, String)>>,
+    chest_types: HashMap<String, Option<(String, String)>>,
     cfg: Option<Vec<Cfg>>,
 }
 
@@ -123,27 +123,27 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     /// Ensure that we've collected all target-specific information to compile
     /// all the units mentioned in `units`.
     pub fn probe_target_info(&mut self, units: &[Unit<'a>]) -> CraftResult<()> {
-        let mut crate_types = BTreeSet::new();
+        let mut chest_types = BTreeSet::new();
         // pre-fill with `bin` for learning about tests (nothing may be
         // explicitly `bin`) as well as `rlib` as it's the coalesced version of
         // `lib` in the compiler and we're not sure which we'll see.
-        crate_types.insert("bin".to_string());
-        crate_types.insert("rlib".to_string());
+        chest_types.insert("bin".to_string());
+        chest_types.insert("rlib".to_string());
         for unit in units {
-            try!(self.visit_crate_type(unit, &mut crate_types));
+            try!(self.visit_chest_type(unit, &mut chest_types));
         }
-        try!(self.probe_target_info_kind(&crate_types, Kind::Target));
+        try!(self.probe_target_info_kind(&chest_types, Kind::Target));
         if self.requested_target().is_none() {
             self.host_info = self.target_info.clone();
         } else {
-            try!(self.probe_target_info_kind(&crate_types, Kind::Host));
+            try!(self.probe_target_info_kind(&chest_types, Kind::Host));
         }
         Ok(())
     }
 
-    fn visit_crate_type(&self, unit: &Unit<'a>, crate_types: &mut BTreeSet<String>) -> CraftResult<()> {
+    fn visit_chest_type(&self, unit: &Unit<'a>, chest_types: &mut BTreeSet<String>) -> CraftResult<()> {
         for target in unit.pkg.manifest().targets() {
-            crate_types.extend(target.rustc_crate_types().iter().map(|s| {
+            chest_types.extend(target.rustc_chest_types().iter().map(|s| {
                 if *s == "lib" {
                     "rlib".to_string()
                 } else {
@@ -152,12 +152,12 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             }));
         }
         for dep in try!(self.dep_targets(&unit)) {
-            try!(self.visit_crate_type(&dep, crate_types));
+            try!(self.visit_chest_type(&dep, chest_types));
         }
         Ok(())
     }
 
-    fn probe_target_info_kind(&mut self, crate_types: &BTreeSet<String>, kind: Kind) -> CraftResult<()> {
+    fn probe_target_info_kind(&mut self, chest_types: &BTreeSet<String>, kind: Kind) -> CraftResult<()> {
         let rustflags = try!(env_args(self.config, &self.build_config, kind, "RUSTFLAGS"));
         let mut process = try!(self.config.rustc()).process();
         process.arg("-")
@@ -167,8 +167,8 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             .args(&rustflags)
             .env_remove("RUST_LOG");
 
-        for crate_type in crate_types {
-            process.arg("--crate-type").arg(crate_type);
+        for chest_type in chest_types {
+            process.arg("--crate-type").arg(chest_type);
         }
         if kind == Kind::Target {
             process.arg("--target").arg(&self.target_triple());
@@ -189,11 +189,11 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         let output = str::from_utf8(&output.stdout).unwrap();
         let mut lines = output.lines();
         let mut map = HashMap::new();
-        for crate_type in crate_types {
+        for chest_type in chest_types {
             let not_supported = error.lines()
-                .any(|line| line.contains("unsupported crate type") && line.contains(crate_type));
+                .any(|line| line.contains("unsupported chest type") && line.contains(chest_type));
             if not_supported {
-                map.insert(crate_type.to_string(), None);
+                map.insert(chest_type.to_string(), None);
                 continue;
             }
             let line = match lines.next() {
@@ -206,7 +206,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
                 Some(part) => part,
                 None => bail!("output of --print=file-names has changed in the compiler, cannot parse"),
             };
-            map.insert(crate_type.to_string(),
+            map.insert(chest_type.to_string(),
                        Some((prefix.to_string(), suffix.to_string())));
         }
 
@@ -220,7 +220,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             Kind::Target => &mut self.target_info,
             Kind::Host => &mut self.host_info,
         };
-        info.crate_types = map;
+        info.chest_types = map;
         info.cfg = cfg;
         Ok(())
     }
@@ -229,7 +229,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     /// top-level units.
     ///
     /// This will recursively walk `units` and all of their dependencies to
-    /// determine which crate are going to be used in plugins or not.
+    /// determine which chest are going to be used in plugins or not.
     pub fn build_used_in_plugin_map(&mut self, units: &[Unit<'a>]) -> CraftResult<()> {
         let mut visited = HashSet::new();
         for unit in units {
@@ -344,9 +344,9 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     /// Returns the file stem for a given target/profile combo
     pub fn file_stem(&self, unit: &Unit) -> String {
         match self.target_metadata(unit) {
-            Some(ref metadata) => format!("{}{}", unit.target.crate_name(), metadata.extra_filename),
+            Some(ref metadata) => format!("{}{}", unit.target.chest_name(), metadata.extra_filename),
             None if unit.target.allows_underscores() => unit.target.name().to_string(),
-            None => unit.target.crate_name(),
+            None => unit.target.chest_name(),
         }
     }
 
@@ -364,23 +364,23 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         let mut ret = Vec::new();
         let mut unsupported = Vec::new();
         {
-            let mut add = |crate_type: &str, linkable: bool| -> CraftResult<()> {
-                let crate_type = if crate_type == "lib" {
+            let mut add = |chest_type: &str, linkable: bool| -> CraftResult<()> {
+                let chest_type = if chest_type == "lib" {
                     "rlib"
                 } else {
-                    crate_type
+                    chest_type
                 };
-                match info.crate_types.get(crate_type) {
+                match info.chest_types.get(chest_type) {
                     Some(&Some((ref prefix, ref suffix))) => {
                         ret.push((format!("{}{}{}", prefix, stem, suffix), linkable));
                         Ok(())
                     }
                     // not supported, don't worry about it
                     Some(&None) => {
-                        unsupported.push(crate_type.to_string());
+                        unsupported.push(chest_type.to_string());
                         Ok(())
                     }
-                    None => bail!("failed to learn about crate-type `{}` early on", crate_type),
+                    None => bail!("failed to learn about chest-type `{}` early on", chest_type),
                 }
             };
             match *unit.target.kind() {
@@ -393,7 +393,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
                 }
                 TargetKind::Lib(ref libs) => {
                     for lib in libs {
-                        try!(add(lib.crate_type(), lib.linkable()));
+                        try!(add(lib.chest_type(), lib.linkable()));
                     }
                 }
             }
@@ -401,13 +401,13 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         if ret.is_empty() {
             if unsupported.len() > 0 {
                 bail!("cannot produce {} for `{}` as the target `{}` \
-                       does not support these crate types",
+                       does not support these chest types",
                       unsupported.join(", "),
                       unit.pkg,
                       self.target_triple())
             }
             bail!("cannot compile `{}` as the target `{}` does not \
-                   support any of the output crate types",
+                   support any of the output chest types",
                   unit.pkg,
                   self.target_triple());
         }

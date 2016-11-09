@@ -113,14 +113,14 @@ fn check_name(name: &str) -> CraftResult<()> {
 
     // Ban keywords + test list found at
     // https://doc.rust-lang.org/grammar.html#keywords
-    let blacklist = ["abstract", "alignof", "as", "become", "box", "break", "const", "continue", "crate", "do",
+    let blacklist = ["abstract", "alignof", "as", "become", "box", "break", "const", "continue", "chest", "do",
                      "else", "enum", "extern", "false", "final", "fn", "for", "if", "impl", "in", "let", "loop",
                      "macro", "match", "mod", "move", "mut", "offsetof", "override", "priv", "proc", "pub", "pure",
                      "ref", "return", "self", "sizeof", "static", "struct", "super", "test", "trait", "true", "type",
                      "typeof", "unsafe", "unsized", "use", "virtual", "where", "while", "yield"];
     if blacklist.contains(&name) {
-        bail!("The name `{}` cannot be used as a crate name\n\
-               use --name to override crate name",
+        bail!("The name `{}` cannot be used as a chest name\n\
+               use --name to override chest name",
               name)
     }
 
@@ -131,8 +131,8 @@ fn check_name(name: &str) -> CraftResult<()> {
         if c == '_' || c == '-' {
             continue;
         }
-        bail!("Invalid character `{}` in crate name: `{}`\n\
-               use --name to override crate name",
+        bail!("Invalid character `{}` in chest name: `{}`\n\
+               use --name to override chest name",
               c,
               name)
     }
@@ -485,7 +485,7 @@ mod tests {
     }
 
     if let Err(e) = Workspace::new(&path.join("Craft.toml"), config) {
-        let msg = format!("compiling this new crate may not work due to invalid \
+        let msg = format!("compiling this new chest may not work due to invalid \
                            workspace configuration\n\n{}",
                           e);
         try!(config.shell().warn(msg));
@@ -565,6 +565,6 @@ mod tests {
         assert_eq!(strip_rust_affixes("rs-foo-rs"), "foo-rs");
         assert_eq!(strip_rust_affixes("foo-rs-rs"), "foo-rs");
         // It shouldn't touch the middle
-        assert_eq!(strip_rust_affixes("some-rust-crate"), "some-rust-crate");
+        assert_eq!(strip_rust_affixes("some-rust-chest"), "some-rust-chest");
     }
 }

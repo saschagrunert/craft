@@ -22,13 +22,13 @@ use util::{Filesystem, FileLock};
 use workspace::Workspace;
 
 #[derive(RustcDecodable, RustcEncodable)]
-enum CrateListing {
-    V1(CrateListingV1),
+enum ChestListing {
+    V1(ChestListingV1),
     Empty,
 }
 
 #[derive(RustcDecodable, RustcEncodable)]
-struct CrateListingV1 {
+struct ChestListingV1 {
     v1: BTreeMap<PackageId, BTreeSet<String>>,
 }
 
@@ -73,7 +73,7 @@ pub fn install(root: Option<&str>,
             .expect("path sources must have a valid path");
         let mut src = PathSource::new(&path, source_id, config);
         try!(src.update().chain_error(|| {
-            human(format!("`{}` is not a crate root; specify a crate to install, or use --path or --git to \
+            human(format!("`{}` is not a chest root; specify a chest to install, or use --path or --git to \
                            specify an alternate source",
                           path.display()))
         }));
@@ -88,7 +88,7 @@ pub fn install(root: Option<&str>,
                         krate,
                         vers,
                         &mut |_| {
-                            Err(human("must specify a crate to install, or use --path or --git to specify alternate \
+                            Err(human("must specify a chest to install, or use --path or --git to specify alternate \
                                        source"))
                         }))
     };
@@ -116,7 +116,7 @@ pub fn install(root: Option<&str>,
     // anything if we're gonna throw it away anyway.
     {
         let metadata = try!(metadata(config, &root));
-        let list = try!(read_crate_list(metadata.file()));
+        let list = try!(read_chest_list(metadata.file()));
         let dst = metadata.parent().join("bin");
         try!(check_overwrites(&dst, pkg, &opts.filter, &list, force));
     }
@@ -145,7 +145,7 @@ pub fn install(root: Option<&str>,
         .collect::<CraftResult<_>>());
 
     let metadata = try!(metadata(config, &root));
-    let mut list = try!(read_crate_list(metadata.file()));
+    let mut list = try!(read_chest_list(metadata.file()));
     let dst = metadata.parent().join("bin");
     let duplicates = try!(check_overwrites(&dst, pkg, &opts.filter, &list, force));
 
@@ -233,7 +233,7 @@ pub fn install(root: Option<&str>,
             .extend(to_install.iter().map(|s| s.to_string()));
     }
 
-    let write_result = write_crate_list(metadata.file(), list);
+    let write_result = write_chest_list(metadata.file(), list);
     match write_result {
         // Replacement error (if any) isn't actually caused by write error
         // but this seems to be the only way to show both.
@@ -337,7 +337,7 @@ fn one<I, F>(mut i: I, f: F) -> CraftResult<Option<I::Item>>
 fn check_overwrites(dst: &Path,
                     pkg: &Package,
                     filter: &ops::CompileFilter,
-                    prev: &CrateListingV1,
+                    prev: &ChestListingV1,
                     force: bool)
                     -> CraftResult<BTreeMap<String, Option<PackageId>>> {
     if let CompileFilter::Everything = *filter {
@@ -369,7 +369,7 @@ fn check_overwrites(dst: &Path,
 fn find_duplicates(dst: &Path,
                    pkg: &Package,
                    filter: &ops::CompileFilter,
-                   prev: &CrateListingV1)
+                   prev: &ChestListingV1)
                    -> BTreeMap<String, Option<PackageId>> {
     let check = |name| {
         let name = format!("{}{}", name, env::consts::EXE_SUFFIX);
@@ -398,34 +398,34 @@ fn find_duplicates(dst: &Path,
     }
 }
 
-fn read_crate_list(mut file: &File) -> CraftResult<CrateListingV1> {
+fn read_chest_list(mut file: &File) -> CraftResult<ChestListingV1> {
     (|| -> CraftResult<_> {
             let mut contents = String::new();
             try!(file.read_to_string(&mut contents));
             let listing = try!(toml::decode_str(&contents).chain_error(|| internal("invalid TOML found for metadata")));
             match listing {
-                CrateListing::V1(v1) => Ok(v1),
-                CrateListing::Empty => Ok(CrateListingV1 { v1: BTreeMap::new() }),
+                ChestListing::V1(v1) => Ok(v1),
+                ChestListing::Empty => Ok(ChestListingV1 { v1: BTreeMap::new() }),
             }
         })
-        .chain_error(|| human("failed to parse crate metadata"))
+        .chain_error(|| human("failed to parse chest metadata"))
 }
 
-fn write_crate_list(mut file: &File, listing: CrateListingV1) -> CraftResult<()> {
+fn write_chest_list(mut file: &File, listing: ChestListingV1) -> CraftResult<()> {
     (|| -> CraftResult<_> {
             try!(file.seek(SeekFrom::Start(0)));
             try!(file.set_len(0));
-            let data = toml::encode_str::<CrateListing>(&CrateListing::V1(listing));
+            let data = toml::encode_str::<ChestListing>(&ChestListing::V1(listing));
             try!(file.write_all(data.as_bytes()));
             Ok(())
         })
-        .chain_error(|| human("failed to write crate metadata"))
+        .chain_error(|| human("failed to write chest metadata"))
 }
 
 pub fn install_list(dst: Option<&str>, config: &Config) -> CraftResult<()> {
     let dst = try!(resolve_root(dst, config));
     let dst = try!(metadata(config, &dst));
-    let list = try!(read_crate_list(dst.file()));
+    let list = try!(read_chest_list(dst.file()));
     let mut shell = config.shell();
     let out = shell.out();
     for (k, v) in list.v1.iter() {
@@ -439,8 +439,8 @@ pub fn install_list(dst: Option<&str>, config: &Config) -> CraftResult<()> {
 
 pub fn uninstall(root: Option<&str>, spec: &str, bins: &[String], config: &Config) -> CraftResult<()> {
     let root = try!(resolve_root(root, config));
-    let crate_metadata = try!(metadata(config, &root));
-    let mut metadata = try!(read_crate_list(crate_metadata.file()));
+    let chest_metadata = try!(metadata(config, &root));
+    let mut metadata = try!(read_chest_list(chest_metadata.file()));
     let mut to_remove = Vec::new();
     {
         let result = try!(PackageIdSpec::query_str(spec, metadata.v1.keys())).clone();
@@ -448,7 +448,7 @@ pub fn uninstall(root: Option<&str>, spec: &str, bins: &[String], config: &Confi
             Entry::Occupied(e) => e,
             Entry::Vacant(..) => panic!("entry not found: {}", result),
         };
-        let dst = crate_metadata.parent().join("bin");
+        let dst = chest_metadata.parent().join("bin");
         for bin in installed.get() {
             let bin = dst.join(bin);
             if fs::metadata(&bin).is_err() {
@@ -486,7 +486,7 @@ pub fn uninstall(root: Option<&str>, spec: &str, bins: &[String], config: &Confi
             installed.remove();
         }
     }
-    try!(write_crate_list(crate_metadata.file(), metadata));
+    try!(write_chest_list(chest_metadata.file(), metadata));
     for bin in to_remove {
         try!(config.shell().status("Removing", bin.display()));
         try!(fs::remove_file(bin));
@@ -496,7 +496,7 @@ pub fn uninstall(root: Option<&str>, spec: &str, bins: &[String], config: &Confi
 }
 
 fn metadata(config: &Config, root: &Filesystem) -> CraftResult<FileLock> {
-    root.open_rw(Path::new(".crates.toml"), config, "crate metadata")
+    root.open_rw(Path::new(".chests.toml"), config, "chest metadata")
 }
 
 fn resolve_root(flag: Option<&str>, config: &Config) -> CraftResult<Filesystem> {

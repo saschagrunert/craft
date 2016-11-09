@@ -1,30 +1,30 @@
-//! Resolution of the entire dependency graph for a crate
+//! Resolution of the entire dependency graph for a chest
 //!
-//! This module implements the core logic in taking the world of crates and
+//! This module implements the core logic in taking the world of chests and
 //! constraints and creating a resolved graph with locked versions for all
-//! crates and their dependencies. This is separate from the registry module
-//! which is more worried about discovering crates from various sources, this
-//! module just uses the Registry trait as a source to learn about crates from.
+//! chests and their dependencies. This is separate from the registry module
+//! which is more worried about discovering chests from various sources, this
+//! module just uses the Registry trait as a source to learn about chests from.
 //!
 //! Actually solving a constraint graph is an NP-hard problem. This algorithm
 //! is basically a nice heuristic to make sure we get roughly the best answer
 //! most of the time. The constraints that we're working with are:
 //!
-//! 1. Each crate can have any number of dependencies. Each dependency can
+//! 1. Each chest can have any number of dependencies. Each dependency can
 //!    declare a version range that it is compatible with.
-//! 2. Crates can be activated with multiple version (e.g. show up in the
+//! 2. Chests can be activated with multiple version (e.g. show up in the
 //!    dependency graph twice) so long as each pairwise instance have
 //!    semver-incompatible versions.
 //!
 //! The algorithm employed here is fairly simple, we simply do a DFS, activating
-//! the "newest crate" (highest version) first and then going to the next
+//! the "newest chest" (highest version) first and then going to the next
 //! option. The heuristics we employ are:
 //!
-//! * Never try to activate a crate version which is incompatible. This means we
-//!   only try crates which will actually satisfy a dependency and we won't ever
-//!   try to activate a crate that's semver compatible with something else
+//! * Never try to activate a chest version which is incompatible. This means we
+//!   only try chests which will actually satisfy a dependency and we won't ever
+//!   try to activate a chest that's semver compatible with something else
 //!   activated (as we're only allowed to have one).
-//! * Always try to activate the highest version crate first. The default
+//! * Always try to activate the highest version chest first. The default
 //!   dependency in Craft (e.g. when you write `foo = "0.1.2"`) is
 //!   semver-compatible, so selecting the highest version possible will allow us
 //!   to hopefully satisfy as many dependencies at once.
@@ -105,7 +105,7 @@ pub enum Method<'a> {
 // Ok(Ok(..)) == success in resolving
 type ResolveResult<'a> = CraftResult<CraftResult<Box<Context<'a>>>>;
 
-// Information about the dependencies for a crate, a tuple of:
+// Information about the dependencies for a chest, a tuple of:
 //
 // (dependency info, candidates, features activated)
 type DepInfo = (Dependency, Vec<Candidate>, Vec<String>);

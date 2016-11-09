@@ -60,7 +60,7 @@ pub struct CompileOptions<'a> {
     pub mode: CompileMode,
     /// `--error_format` flag for the compiler.
     pub message_format: MessageFormat,
-    /// Extra arguments to be passed to rustdoc (for main crate and dependencies)
+    /// Extra arguments to be passed to rustdoc (for main chest and dependencies)
     pub target_rustdoc_args: Option<&'a [String]>,
     /// The specified target will be compiled with all the available arguments,
     /// note that this only accounts for the *final* invocation of rustc
