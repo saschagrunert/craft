@@ -15,10 +15,18 @@ use support::paths;
 use support::git::repo;
 use craft::util::Sha256;
 
-pub fn registry_path() -> PathBuf { paths::root().join("registry") }
-pub fn registry() -> Url { Url::from_file_path(&*registry_path()).ok().unwrap() }
-pub fn dl_path() -> PathBuf { paths::root().join("dl") }
-pub fn dl_url() -> Url { Url::from_file_path(&*dl_path()).ok().unwrap() }
+pub fn registry_path() -> PathBuf {
+    paths::root().join("registry")
+}
+pub fn registry() -> Url {
+    Url::from_file_path(&*registry_path()).ok().unwrap()
+}
+pub fn dl_path() -> PathBuf {
+    paths::root().join("dl")
+}
+pub fn dl_url() -> Url {
+    Url::from_file_path(&*dl_path()).ok().unwrap()
+}
 
 pub struct Package {
     name: String,
@@ -42,15 +50,11 @@ pub fn init() {
     let config = paths::home().join(".craft/config");
     t!(fs::create_dir_all(config.parent().unwrap()));
     if fs::metadata(&config).is_ok() {
-        return
+        return;
     }
     t!(t!(File::create(&config)).write_all(format!(r#"
         [registry]
             token = "api-token"
-
-        [source.crates-io]
-        registry = 'https://wut'
-        replace-with = 'dummy-registry'
 
         [source.dummy-registry]
         registry = '{reg}'
@@ -58,7 +62,8 @@ pub fn init() {
 
     // Init a new registry
     repo(&registry_path())
-        .file("config.json", &format!(r#"
+        .file("config.json",
+              &format!(r#"
             {{"dl":"{0}","api":"{0}"}}
         "#, dl_url()))
         .build();
@@ -93,17 +98,11 @@ impl Package {
         self.full_dep(name, vers, None, "normal", &[])
     }
 
-    pub fn feature_dep(&mut self,
-                       name: &str,
-                       vers: &str,
-                       features: &[&str]) -> &mut Package {
+    pub fn feature_dep(&mut self, name: &str, vers: &str, features: &[&str]) -> &mut Package {
         self.full_dep(name, vers, None, "normal", features)
     }
 
-    pub fn target_dep(&mut self,
-                      name: &str,
-                      vers: &str,
-                      target: &str) -> &mut Package {
+    pub fn target_dep(&mut self, name: &str, vers: &str, target: &str) -> &mut Package {
         self.full_dep(name, vers, Some(target), "normal", &[])
     }
 
@@ -116,7 +115,8 @@ impl Package {
                 vers: &str,
                 target: Option<&str>,
                 kind: &str,
-                features: &[&str]) -> &mut Package {
+                features: &[&str])
+                -> &mut Package {
         self.deps.push(Dependency {
             name: name.to_string(),
             vers: vers.to_string(),
@@ -136,17 +136,20 @@ impl Package {
         self.make_archive();
 
         // Figure out what we're going to write into the index
-        let deps = self.deps.iter().map(|dep| {
-            let mut map = HashMap::new();
-            map.insert("name".to_string(), dep.name.to_json());
-            map.insert("req".to_string(), dep.vers.to_json());
-            map.insert("features".to_string(), dep.features.to_json());
-            map.insert("default_features".to_string(), true.to_json());
-            map.insert("target".to_string(), dep.target.to_json());
-            map.insert("optional".to_string(), false.to_json());
-            map.insert("kind".to_string(), dep.kind.to_json());
-            map
-        }).collect::<Vec<_>>();
+        let deps = self.deps
+            .iter()
+            .map(|dep| {
+                let mut map = HashMap::new();
+                map.insert("name".to_string(), dep.name.to_json());
+                map.insert("req".to_string(), dep.vers.to_json());
+                map.insert("features".to_string(), dep.features.to_json());
+                map.insert("default_features".to_string(), true.to_json());
+                map.insert("target".to_string(), dep.target.to_json());
+                map.insert("optional".to_string(), false.to_json());
+                map.insert("kind".to_string(), dep.kind.to_json());
+                map
+            })
+            .collect::<Vec<_>>();
         let cksum = {
             let mut c = Vec::new();
             t!(t!(File::open(&self.archive_dst())).read_to_end(&mut c));
@@ -198,7 +201,7 @@ impl Package {
                            &[&parent]));
         }
 
-        return cksum
+        return cksum;
     }
 
     fn make_archive(&self) {
@@ -216,7 +219,7 @@ impl Package {
             let kind = match &dep.kind[..] {
                 "build" => "build-",
                 "dev" => "dev-",
-                _ => ""
+                _ => "",
             };
             manifest.push_str(&format!(r#"
                 [{}{}dependencies.{}]
@@ -230,7 +233,7 @@ impl Package {
         let mut a = Builder::new(GzEncoder::new(f, Default));
         self.append(&mut a, "Craft.toml", &manifest);
         if self.files.is_empty() {
-            self.append(&mut a, "src/lib.rs", "");
+            self.append(&mut a, "src/lib.c", "");
         } else {
             for &(ref name, ref contents) in self.files.iter() {
                 self.append(&mut a, name, contents);

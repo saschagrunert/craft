@@ -14,7 +14,11 @@ pub fn craft_home() -> PathBuf {
 pub struct InstalledExe(pub &'static str);
 
 fn exe(name: &str) -> String {
-    if cfg!(windows) {format!("{}.exe", name)} else {name.to_string()}
+    if cfg!(windows) {
+        format!("{}.exe", name)
+    } else {
+        name.to_string()
+    }
 }
 
 impl<P: AsRef<Path>> Matcher<P> for InstalledExe {

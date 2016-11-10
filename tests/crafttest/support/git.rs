@@ -13,7 +13,9 @@ pub struct RepoBuilder {
     files: Vec<PathBuf>,
 }
 
-pub fn repo(p: &Path) -> RepoBuilder { RepoBuilder::init(p) }
+pub fn repo(p: &Path) -> RepoBuilder {
+    RepoBuilder::init(p)
+}
 
 impl RepoBuilder {
     pub fn init(p: &Path) -> RepoBuilder {
@@ -24,7 +26,10 @@ impl RepoBuilder {
             t!(config.set_str("user.name", "name"));
             t!(config.set_str("user.email", "email"));
         }
-        RepoBuilder { repo: repo, files: Vec::new() }
+        RepoBuilder {
+            repo: repo,
+            files: Vec::new(),
+        }
     }
 
     pub fn file(self, path: &str, contents: &str) -> RepoBuilder {
@@ -95,9 +100,7 @@ pub fn add(repo: &git2::Repository) {
     t!(index.write());
 }
 
-pub fn add_submodule<'a>(repo: &'a git2::Repository, url: &str,
-                         path: &Path) -> git2::Submodule<'a>
-{
+pub fn add_submodule<'a>(repo: &'a git2::Repository, url: &str, path: &Path) -> git2::Submodule<'a> {
     let path = path.to_str().unwrap().replace(r"\", "/");
     let mut s = t!(repo.submodule(url, Path::new(&path), false));
     let subrepo = t!(s.open());

@@ -28,20 +28,22 @@ pub mod registry;
 #[derive(PartialEq,Clone)]
 struct FileBuilder {
     path: PathBuf,
-    body: String
+    body: String,
 }
 
 impl FileBuilder {
     pub fn new(path: PathBuf, body: &str) -> FileBuilder {
-        FileBuilder { path: path, body: body.to_string() }
+        FileBuilder {
+            path: path,
+            body: body.to_string(),
+        }
     }
 
     fn mk(&self) {
         self.dirname().mkdir_p();
 
-        let mut file = fs::File::create(&self.path).unwrap_or_else(|e| {
-            panic!("could not create file {}: {}", self.path.display(), e)
-        });
+        let mut file = fs::File::create(&self.path)
+            .unwrap_or_else(|e| panic!("could not create file {}: {}", self.path.display(), e));
 
         t!(file.write_all(self.body.as_bytes()));
     }
@@ -59,7 +61,10 @@ struct SymlinkBuilder {
 
 impl SymlinkBuilder {
     pub fn new(dst: PathBuf, src: PathBuf) -> SymlinkBuilder {
-        SymlinkBuilder { dst: dst, src: src }
+        SymlinkBuilder {
+            dst: dst,
+            src: src,
+        }
     }
 
     #[cfg(unix)]
@@ -84,7 +89,7 @@ pub struct ProjectBuilder {
     name: String,
     root: PathBuf,
     files: Vec<FileBuilder>,
-    symlinks: Vec<SymlinkBuilder>
+    symlinks: Vec<SymlinkBuilder>,
 }
 
 impl ProjectBuilder {
@@ -93,7 +98,7 @@ impl ProjectBuilder {
             name: name.to_string(),
             root: root,
             files: vec![],
-            symlinks: vec![]
+            symlinks: vec![],
         }
     }
 
@@ -101,7 +106,9 @@ impl ProjectBuilder {
         self.root.clone()
     }
 
-    pub fn url(&self) -> Url { path2url(self.root()) }
+    pub fn url(&self) -> Url {
+        path2url(self.root())
+    }
 
     pub fn bin(&self, b: &str) -> PathBuf {
         self.build_dir().join("debug").join(&format!("{}{}", b,
@@ -114,8 +121,10 @@ impl ProjectBuilder {
     }
 
     pub fn target_bin(&self, target: &str, b: &str) -> PathBuf {
-        self.build_dir().join(target).join("debug")
-                        .join(&format!("{}{}", b, env::consts::EXE_SUFFIX))
+        self.build_dir()
+            .join(target)
+            .join("debug")
+            .join(&format!("{}{}", b, env::consts::EXE_SUFFIX))
     }
 
     pub fn build_dir(&self) -> PathBuf {
@@ -125,7 +134,7 @@ impl ProjectBuilder {
     pub fn process<T: AsRef<OsStr>>(&self, program: T) -> ProcessBuilder {
         let mut p = ::process(program);
         p.cwd(self.root());
-        return p
+        return p;
     }
 
     pub fn craft(&self, cmd: &str) -> ProcessBuilder {
@@ -139,16 +148,13 @@ impl ProjectBuilder {
         self.craft(cmd)
     }
 
-    pub fn file<B: AsRef<Path>>(mut self, path: B,
-                                body: &str) -> ProjectBuilder {
+    pub fn file<B: AsRef<Path>>(mut self, path: B, body: &str) -> ProjectBuilder {
         self.files.push(FileBuilder::new(self.root.join(path), body));
         self
     }
 
-    pub fn symlink<T: AsRef<Path>>(mut self, dst: T,
-                                   src: T) -> ProjectBuilder {
-        self.symlinks.push(SymlinkBuilder::new(self.root.join(dst),
-                                               self.root.join(src)));
+    pub fn symlink<T: AsRef<Path>>(mut self, dst: T, src: T) -> ProjectBuilder {
+        self.symlinks.push(SymlinkBuilder::new(self.root.join(dst), self.root.join(src)));
         self
     }
 
@@ -172,8 +178,10 @@ impl ProjectBuilder {
 
     pub fn read_lockfile(&self) -> String {
         let mut buffer = String::new();
-        fs::File::open(self.root().join("Craft.lock")).unwrap()
-            .read_to_string(&mut buffer).unwrap();
+        fs::File::open(self.root().join("Craft.lock"))
+            .unwrap()
+            .read_to_string(&mut buffer)
+            .unwrap();
         buffer
     }
 
@@ -193,7 +201,6 @@ pub fn project_in_home(name: &str) -> ProjectBuilder {
 }
 
 // === Helpers ===
-
 pub fn main_file(println: &str, deps: &[&str]) -> String {
     let mut buf = String::new();
 
@@ -216,19 +223,23 @@ impl<T, E: fmt::Display> ErrMsg<T> for Result<T, E> {
     fn with_err_msg(self, val: String) -> Result<T, String> {
         match self {
             Ok(val) => Ok(val),
-            Err(err) => Err(format!("{}; original={}", val, err))
+            Err(err) => Err(format!("{}; original={}", val, err)),
         }
     }
 }
 
 // Path to craft executables
 pub fn craft_dir() -> PathBuf {
-    env::var_os("CRAFT_BIN_PATH").map(PathBuf::from).or_else(|| {
-        env::current_exe().ok().as_ref().and_then(|s| s.parent())
-            .map(|s| s.to_path_buf())
-    }).unwrap_or_else(|| {
-        panic!("CRAFT_BIN_PATH wasn't set. Cannot continue running test")
-    })
+    env::var_os("CRAFT_BIN_PATH")
+        .map(PathBuf::from)
+        .or_else(|| {
+            env::current_exe()
+                .ok()
+                .as_ref()
+                .and_then(|s| s.parent())
+                .map(|s| s.to_path_buf())
+        })
+        .unwrap_or_else(|| panic!("CRAFT_BIN_PATH wasn't set. Cannot continue running test"))
 }
 
 /// Returns an absolute path in the filesystem that `path` points to. The
@@ -271,9 +282,9 @@ impl Execs {
     }
 
     pub fn with_json(mut self, expected: &str) -> Execs {
-        self.expect_json = Some(expected.split("\n\n").map(|obj| {
-            Json::from_str(obj).unwrap()
-        }).collect());
+        self.expect_json = Some(expected.split("\n\n")
+            .map(|obj| Json::from_str(obj).unwrap())
+            .collect());
         self
     }
 
@@ -287,9 +298,8 @@ impl Execs {
         match self.expect_exit_code {
             None => hamcrest::success(),
             Some(code) => {
-                hamcrest::expect(
-                    actual.status.code() == Some(code),
-                    format!("exited with {}\n--- stdout\n{}\n--- stderr\n{}",
+                hamcrest::expect(actual.status.code() == Some(code),
+                                 format!("exited with {}\n--- stdout\n{}\n--- stderr\n{}",
                             actual.status,
                             String::from_utf8_lossy(&actual.stdout),
                             String::from_utf8_lossy(&actual.stderr)))
@@ -326,20 +336,29 @@ impl Execs {
     }
 
     fn match_stderr(&self, actual: &Output) -> hamcrest::MatchResult {
-        self.match_std(self.expect_stderr.as_ref(), &actual.stderr,
-                       "stderr", &actual.stdout, false)
+        self.match_std(self.expect_stderr.as_ref(),
+                       &actual.stderr,
+                       "stderr",
+                       &actual.stdout,
+                       false)
     }
 
-    fn match_std(&self, expected: Option<&String>, actual: &[u8],
-                 description: &str, extra: &[u8],
-                 partial: bool) -> hamcrest::MatchResult {
+    fn match_std(&self,
+                 expected: Option<&String>,
+                 actual: &[u8],
+                 description: &str,
+                 extra: &[u8],
+                 partial: bool)
+                 -> hamcrest::MatchResult {
         let out = match expected {
             Some(out) => out,
             None => return hamcrest::success(),
         };
         let actual = match str::from_utf8(actual) {
-            Err(..) => return Err(format!("{} was not utf8 encoded",
-                                       description)),
+            Err(..) => {
+                return Err(format!("{} was not utf8 encoded",
+                                       description))
+            }
             Ok(actual) => actual,
         };
         // Let's not deal with \r\n vs \n on windows...
@@ -362,7 +381,7 @@ impl Execs {
             self.diff_lines(a, e, partial)
         };
         hamcrest::expect(diffs.is_empty(),
-                    format!("differences:\n\
+                         format!("differences:\n\
                             {}\n\n\
                             other output:\n\
                             `{}`", diffs.join("\n"),
@@ -372,45 +391,45 @@ impl Execs {
 
     fn match_json(&self, expected: &Json, line: &str) -> hamcrest::MatchResult {
         let actual = match Json::from_str(line) {
-             Err(e) => return Err(format!("invalid json, {}:\n`{}`", e, line)),
-             Ok(actual) => actual,
+            Err(e) => return Err(format!("invalid json, {}:\n`{}`", e, line)),
+            Ok(actual) => actual,
         };
 
         match find_mismatch(expected, &actual) {
-            Some((expected_part, actual_part)) => Err(format!(
+            Some((expected_part, actual_part)) => {
+                Err(format!(
                 "JSON mismatch\nExpected:\n{}\nWas:\n{}\nExpected part:\n{}\nActual part:\n{}\n",
                 expected.pretty(), actual.pretty(),
                 expected_part.pretty(), actual_part.pretty()
-            )),
+            ))
+            }
             None => Ok(()),
         }
     }
 
-    fn diff_lines<'a>(&self, actual: str::Lines<'a>, expected: str::Lines<'a>,
-                      partial: bool) -> Vec<String> {
+    fn diff_lines<'a>(&self, actual: str::Lines<'a>, expected: str::Lines<'a>, partial: bool) -> Vec<String> {
         let actual = actual.take(if partial {
             expected.clone().count()
         } else {
             usize::MAX
         });
-        zip_all(actual, expected).enumerate().filter_map(|(i, (a,e))| {
-            match (a, e) {
-                (Some(a), Some(e)) => {
-                    if lines_match(&e, &a) {
-                        None
-                    } else {
-                        Some(format!("{:3} - |{}|\n    + |{}|\n", i, e, a))
+        zip_all(actual, expected)
+            .enumerate()
+            .filter_map(|(i, (a, e))| {
+                match (a, e) {
+                    (Some(a), Some(e)) => {
+                        if lines_match(&e, &a) {
+                            None
+                        } else {
+                            Some(format!("{:3} - |{}|\n    + |{}|\n", i, e, a))
+                        }
                     }
-                },
-                (Some(a), None) => {
-                    Some(format!("{:3} -\n    + |{}|\n", i, a))
-                },
-                (None, Some(e)) => {
-                    Some(format!("{:3} - |{}|\n    +\n", i, e))
-                },
-                (None, None) => panic!("Cannot get here")
-            }
-        }).collect()
+                    (Some(a), None) => Some(format!("{:3} -\n    + |{}|\n", i, a)),
+                    (None, Some(e)) => Some(format!("{:3} - |{}|\n    +\n", i, e)),
+                    (None, None) => panic!("Cannot get here"),
+                }
+            })
+            .collect()
     }
 }
 
@@ -420,13 +439,11 @@ pub fn lines_match(expected: &str, mut actual: &str) -> bool {
         match actual.find(part) {
             Some(j) => {
                 if i == 0 && j != 0 {
-                    return false
+                    return false;
                 }
                 actual = &actual[j + part.len()..];
             }
-            None => {
-                return false
-            }
+            None => return false,
         }
     }
     actual.is_empty() || expected.ends_with("[..]")
@@ -468,9 +485,11 @@ fn find_mismatch<'a>(expected: &'a Json, actual: &'a Json) -> Option<(&'a Json, 
                 result
             }
 
-            sorted(l).iter().zip(sorted(r))
-             .filter_map(|(l, r)| find_mismatch(l, r))
-             .nth(0)
+            sorted(l)
+                .iter()
+                .zip(sorted(r))
+                .filter_map(|(l, r)| find_mismatch(l, r))
+                .nth(0)
         }
         (&Object(ref l), &Object(ref r)) => {
             let same_keys = l.len() == r.len() && l.keys().all(|k| r.contains_key(k));
@@ -478,9 +497,10 @@ fn find_mismatch<'a>(expected: &'a Json, actual: &'a Json) -> Option<(&'a Json, 
                 return Some((expected, actual));
             }
 
-            l.values().zip(r.values())
-             .filter_map(|(l, r)| find_mismatch(l, r))
-             .nth(0)
+            l.values()
+                .zip(r.values())
+                .filter_map(|(l, r)| find_mismatch(l, r))
+                .nth(0)
         }
         (&Null, &Null) => None,
         _ => Some((expected, actual)),
@@ -493,7 +513,7 @@ struct ZipAll<I1: Iterator, I2: Iterator> {
     second: I2,
 }
 
-impl<T, I1: Iterator<Item=T>, I2: Iterator<Item=T>> Iterator for ZipAll<I1, I2> {
+impl<T, I1: Iterator<Item = T>, I2: Iterator<Item = T>> Iterator for ZipAll<I1, I2> {
     type Item = (Option<T>, Option<T>);
     fn next(&mut self) -> Option<(Option<T>, Option<T>)> {
         let first = self.first.next();
@@ -501,12 +521,12 @@ impl<T, I1: Iterator<Item=T>, I2: Iterator<Item=T>> Iterator for ZipAll<I1, I2> 
 
         match (first, second) {
             (None, None) => None,
-            (a, b) => Some((a, b))
+            (a, b) => Some((a, b)),
         }
     }
 }
 
-fn zip_all<T, I1: Iterator<Item=T>, I2: Iterator<Item=T>>(a: I1, b: I2) -> ZipAll<I1, I2> {
+fn zip_all<T, I1: Iterator<Item = T>, I2: Iterator<Item = T>>(a: I1, b: I2) -> ZipAll<I1, I2> {
     ZipAll {
         first: a,
         second: b,
@@ -532,14 +552,14 @@ impl<'a> hamcrest::Matcher<&'a mut ProcessBuilder> for Execs {
 
         match res {
             Ok(out) => self.match_output(&out),
-            Err(ProcessError { output: Some(ref out), .. }) => {
-                self.match_output(out)
-            }
+            Err(ProcessError { output: Some(ref out), .. }) => self.match_output(out),
             Err(e) => {
                 let mut s = format!("could not exec process {}: {}", process, e);
                 match e.cause() {
-                    Some(cause) => s.push_str(&format!("\ncaused by: {}",
-                                                       cause.description())),
+                    Some(cause) => {
+                        s.push_str(&format!("\ncaused by: {}",
+                                                       cause.description()))
+                    }
                     None => {}
                 }
                 Err(s)
@@ -568,7 +588,7 @@ pub fn execs() -> Execs {
 
 #[derive(Clone)]
 pub struct ShellWrites {
-    expected: String
+    expected: String,
 }
 
 impl fmt::Display for ShellWrites {
@@ -578,9 +598,7 @@ impl fmt::Display for ShellWrites {
 }
 
 impl<'a> hamcrest::Matcher<&'a [u8]> for ShellWrites {
-    fn matches(&self, actual: &[u8])
-        -> hamcrest::MatchResult
-    {
+    fn matches(&self, actual: &[u8]) -> hamcrest::MatchResult {
         let actual = String::from_utf8_lossy(actual);
         let actual = actual.to_string();
         hamcrest::expect(actual == self.expected, actual)
@@ -635,30 +653,28 @@ pub fn path2url(p: PathBuf) -> Url {
 }
 
 fn substitute_macros(input: &str) -> String {
-    let macros = [
-        ("[RUNNING]",     "     Running"),
-        ("[COMPILING]",   "   Compiling"),
-        ("[CREATED]",     "     Created"),
-        ("[FINISHED]",    "    Finished"),
-        ("[ERROR]",       "error:"),
-        ("[WARNING]",     "warning:"),
-        ("[DOCUMENTING]", " Documenting"),
-        ("[FRESH]",       "       Fresh"),
-        ("[UPDATING]",    "    Updating"),
-        ("[ADDING]",      "      Adding"),
-        ("[REMOVING]",    "    Removing"),
-        ("[DOCTEST]",     "   Doc-tests"),
-        ("[PACKAGING]",   "   Packaging"),
-        ("[DOWNLOADING]", " Downloading"),
-        ("[UPLOADING]",   "   Uploading"),
-        ("[VERIFYING]",   "   Verifying"),
-        ("[ARCHIVING]",   "   Archiving"),
-        ("[INSTALLING]",  "  Installing"),
-        ("[REPLACING]",   "   Replacing"),
-        ("[UNPACKING]",   "   Unpacking"),
-        ("[EXE]", if cfg!(windows) {".exe"} else {""}),
-        ("[/]", if cfg!(windows) {"\\"} else {"/"}),
-    ];
+    let macros = [("[RUNNING]", "     Running"),
+                  ("[COMPILING]", "   Compiling"),
+                  ("[CREATED]", "     Created"),
+                  ("[FINISHED]", "    Finished"),
+                  ("[ERROR]", "error:"),
+                  ("[WARNING]", "warning:"),
+                  ("[DOCUMENTING]", " Documenting"),
+                  ("[FRESH]", "       Fresh"),
+                  ("[UPDATING]", "    Updating"),
+                  ("[ADDING]", "      Adding"),
+                  ("[REMOVING]", "    Removing"),
+                  ("[DOCTEST]", "   Doc-tests"),
+                  ("[PACKAGING]", "   Packaging"),
+                  ("[DOWNLOADING]", " Downloading"),
+                  ("[UPLOADING]", "   Uploading"),
+                  ("[VERIFYING]", "   Verifying"),
+                  ("[ARCHIVING]", "   Archiving"),
+                  ("[INSTALLING]", "  Installing"),
+                  ("[REPLACING]", "   Replacing"),
+                  ("[UNPACKING]", "   Unpacking"),
+                  ("[EXE]", if cfg!(windows) { ".exe" } else { "" }),
+                  ("[/]", if cfg!(windows) { "\\" } else { "/" })];
     let mut result = input.to_owned();
     for &(pat, subst) in macros.iter() {
         result = result.replace(pat, subst)

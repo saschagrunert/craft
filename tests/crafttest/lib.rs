@@ -12,8 +12,12 @@ extern crate tar;
 extern crate tempdir;
 extern crate term;
 extern crate url;
-#[cfg(windows)] extern crate kernel32;
-#[cfg(windows)] extern crate winapi;
+
+#[cfg(windows)]
+extern crate kernel32;
+
+#[cfg(windows)]
+extern crate winapi;
 
 #[macro_use]
 extern crate log;
@@ -34,10 +38,7 @@ pub fn rustc_host() -> String {
 }
 
 pub fn is_nightly() -> bool {
-    RUSTC.with(|r| {
-        r.verbose_version.contains("-nightly") ||
-            r.verbose_version.contains("-dev")
-    })
+    RUSTC.with(|r| r.verbose_version.contains("-nightly") || r.verbose_version.contains("-dev"))
 }
 
 pub fn process<T: AsRef<OsStr>>(t: T) -> craft::util::ProcessBuilder {
@@ -70,9 +71,9 @@ fn _process(t: &OsStr) -> craft::util::ProcessBuilder {
         let rustc = RUSTC.with(|r| r.path.clone());
         let path = env::var_os("PATH").unwrap_or(Default::default());
         let rustc = env::split_paths(&path)
-                        .map(|p| p.join(&rustc))
-                        .find(|p| p.exists())
-                        .unwrap();
+            .map(|p| p.join(&rustc))
+            .find(|p| p.exists())
+            .unwrap();
         let mut libdir = rustc.clone();
         libdir.pop();
         libdir.pop();
@@ -85,7 +86,7 @@ fn _process(t: &OsStr) -> craft::util::ProcessBuilder {
             p.env(var, env::join_paths(&paths).unwrap());
         }
     }
-    return p
+    return p;
 }
 
 pub fn craft_process() -> craft::util::ProcessBuilder {

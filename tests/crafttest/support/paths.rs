@@ -7,7 +7,7 @@ use std::sync::atomic::{AtomicUsize, ATOMIC_USIZE_INIT, Ordering};
 
 use filetime::{self, FileTime};
 
-static CRAFT_INTEGRATION_TEST_DIR : &'static str = "cit";
+static CRAFT_INTEGRATION_TEST_DIR: &'static str = "cit";
 static NEXT_ID: AtomicUsize = ATOMIC_USIZE_INIT;
 
 thread_local!(static TASK_ID: usize = NEXT_ID.fetch_add(1, Ordering::SeqCst));
@@ -20,7 +20,7 @@ fn init() {
     });
     LOCAL_INIT.with(|i| {
         if i.get() {
-            return
+            return;
         }
         i.set(true);
         root().rm_rf();
@@ -66,17 +66,16 @@ pub trait CraftPathExt {
         self.move_in_time(|sec, nsec| (sec + 3600, nsec))
     }
 
-    fn move_in_time<F>(&self, F)
-        where F: Fn(u64, u32) -> (u64, u32);
+    fn move_in_time<F>(&self, F) where F: Fn(u64, u32) -> (u64, u32);
 }
 
 impl CraftPathExt for Path {
-    /* Technically there is a potential race condition, but we don't
-     * care all that much for our tests
-     */
+    // Technically there is a potential race condition, but we don't
+    // care all that much for our tests
+    //
     fn rm_rf(&self) {
         if !self.exists() {
-            return
+            return;
         }
 
         for file in t!(fs::read_dir(self)) {
@@ -95,13 +94,11 @@ impl CraftPathExt for Path {
     }
 
     fn mkdir_p(&self) {
-        fs::create_dir_all(self).unwrap_or_else(|e| {
-            panic!("failed to mkdir_p {}: {}", self.display(), e)
-        })
+        fs::create_dir_all(self).unwrap_or_else(|e| panic!("failed to mkdir_p {}: {}", self.display(), e))
     }
 
     fn move_in_time<F>(&self, travel_amount: F)
-        where F: Fn(u64, u32) -> ((u64, u32)),
+        where F: Fn(u64, u32) -> ((u64, u32))
     {
         if self.is_file() {
             time_travel(self, &travel_amount);
@@ -110,7 +107,7 @@ impl CraftPathExt for Path {
         }
 
         fn recurse<F>(p: &Path, bad: &Path, travel_amount: &F)
-            where F: Fn(u64, u32) -> ((u64, u32)),
+            where F: Fn(u64, u32) -> ((u64, u32))
         {
             if p.is_file() {
                 time_travel(p, travel_amount)
@@ -123,7 +120,7 @@ impl CraftPathExt for Path {
         }
 
         fn time_travel<F>(path: &Path, travel_amount: &F)
-            where F: Fn(u64, u32) -> ((u64, u32)),
+            where F: Fn(u64, u32) -> ((u64, u32))
         {
             let stat = t!(path.metadata());
 
@@ -134,7 +131,8 @@ impl CraftPathExt for Path {
 
             // Sadly change_file_times has a failure mode where a readonly file
             // cannot have its times changed on windows.
-            do_op(path, "set file times",
+            do_op(path,
+                  "set file times",
                   |path| filetime::set_file_times(path, newtime, newtime));
         }
     }
@@ -145,8 +143,7 @@ fn do_op<F>(path: &Path, desc: &str, mut f: F)
 {
     match f(path) {
         Ok(()) => {}
-        Err(ref e) if cfg!(windows) &&
-                      e.kind() == ErrorKind::PermissionDenied => {
+        Err(ref e) if cfg!(windows) && e.kind() == ErrorKind::PermissionDenied => {
             let mut p = t!(path.metadata()).permissions();
             p.set_readonly(false);
             t!(fs::set_permissions(path, p));
