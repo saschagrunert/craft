@@ -46,6 +46,7 @@ openssl = "0"
 hamcrest = "0"
 bufstream = "0"
 filetime = "0"
+crafttest = { path = "tests/crafttest" }
 
 [[bin]]
 name = "craft"
