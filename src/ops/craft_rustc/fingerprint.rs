@@ -562,10 +562,10 @@ fn dep_info_mtime_if_fresh(dep_info: &Path) -> CraftResult<Option<FileTime>> {
     macro_rules! fs_try {
         ($e:expr) => (match $e { Ok(e) => e, Err(..) => return Ok(None) })
     }
-    let mut f = BufReader::new(fs_File::open(dep_info)?);
+    let mut f = BufReader::new(fs_try!(File::open(dep_info)));
     // see comments in append_current_dir for where this cwd is manifested from.
     let mut cwd = Vec::new();
-    if fs_f.read_until(0, &mut cwd)? == 0 {
+    if fs_try!(f.read_until(0, &mut cwd)) == 0 {
         return Ok(None);
     }
     let cwd = util::bytes2path(&cwd[..cwd.len() - 1])?;

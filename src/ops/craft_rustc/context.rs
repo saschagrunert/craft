@@ -211,7 +211,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         }
 
         let cfg = if has_cfg {
-            Some(lines.map(Cfg::from_str).collect()?)
+            Some(try!(lines.map(Cfg::from_str).collect()))
         } else {
             None
         };

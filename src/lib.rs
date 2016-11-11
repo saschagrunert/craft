@@ -90,8 +90,8 @@ fn process<V, F>(mut callback: F)
     let result = (|| {
         config = Some(Config::default()?);
         let args: Vec<_> =
-            env::args_os().map(|s| s.into_string().map_err(|s| human(format!("invalid unicode in argument: {:?}", s))))
-                .collect()?;
+            try!(env::args_os().map(|s| s.into_string().map_err(|s| human(format!("invalid unicode in argument: {:?}", s))))
+                .collect());
         callback(&args, config.as_ref().unwrap())
     })();
     let mut verbose_shell = shell(Verbose, Auto);

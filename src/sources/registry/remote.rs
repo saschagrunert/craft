@@ -184,9 +184,9 @@ fn github_up_to_date(handle: &mut Easy, url: &Url, oid: &git2::Oid) -> bool {
 
     // This expects github urls in the form `github.com/user/repo` and nothing
     // else
-    let mut pieces = url.path_segments()?;
-    let username = pieces.next()?;
-    let repo = pieces.next()?;
+    let mut pieces = try!(url.path_segments());
+    let username = try!(pieces.next());
+    let repo = try!(pieces.next());
     if pieces.next().is_some() {
         return false;
     }
@@ -194,16 +194,16 @@ fn github_up_to_date(handle: &mut Easy, url: &Url, oid: &git2::Oid) -> bool {
     let url = format!("https://api.github.com/repos/{}/{}/commits/master",
                       username,
                       repo);
-    handle.get(true).ok()?;
-    handle.url(&url).ok()?;
-    handle.useragent("craft").ok()?;
+    try!(handle.get(true).ok());
+    try!(handle.url(&url).ok());
+    try!(handle.useragent("craft").ok());
     let mut headers = List::new();
-    headers.append("Accept: application/vnd.github.3.sha").ok()?;
-    headers.append(&format!("If-None-Match: \"{}\"", oid)).ok()?;
-    handle.http_headers(headers).ok()?;
-    handle.perform().ok()?;
+    try!(headers.append("Accept: application/vnd.github.3.sha").ok());
+    try!(headers.append(&format!("If-None-Match: \"{}\"", oid)).ok());
+    try!(handle.http_headers(headers).ok());
+    try!(handle.perform().ok());
 
-    handle.response_code().ok()? == 304
+    try!(handle.response_code().ok()) == 304
 }
 
 /// Create a new HTTP handle with appropriate global configuration for craft.

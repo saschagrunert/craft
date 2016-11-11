@@ -51,9 +51,9 @@ fn metadata_full(ws: &Workspace, opt: &OutputMetadataOptions) -> CraftResult<Exp
                                          &[])?;
     let (packages, resolve) = deps;
 
-    let packages = packages.package_ids()
+    let packages = try!(packages.package_ids()
         .map(|i| packages.get(i).map(|p| p.clone()))
-        .collect()?;
+        .collect());
 
     Ok(ExportInfo {
         packages: packages,
