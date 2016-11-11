@@ -48,11 +48,10 @@ impl Config {
 
     pub fn default() -> CraftResult<Config> {
         let shell = ::shell(Verbosity::Verbose, ColorConfig::Auto);
-        let cwd = try!(env::current_dir().chain_error(|| human("couldn't get the current directory of the process")));
-        let homedir = try!(homedir(&cwd).chain_error(|| {
-            human("Craft couldn't find your home directory. \
-                  This probably means that $HOME was not set.")
-        }));
+        let cwd = env::current_dir().chain_error(|| human("couldn't get the current directory of the process"))?;
+        let homedir = homedir(&cwd).chain_error(|| {
+                human("Craft couldn't find your home directory. This probably means that $HOME was not set.")
+            })?;
         Ok(Config::new(shell, cwd, homedir))
     }
 
@@ -85,7 +84,7 @@ impl Config {
     }
 
     pub fn rustc(&self) -> CraftResult<&Rustc> {
-        self.rustc.get_or_try_init(|| Rustc::new(try!(self.get_tool("rustc"))))
+        self.rustc.get_or_try_init(|| Rustc::new(self.get_tool("rustc")?))
     }
 
     pub fn values(&self) -> CraftResult<&HashMap<String, ConfigValue>> {
@@ -99,7 +98,7 @@ impl Config {
     pub fn target_dir(&self) -> CraftResult<Option<Filesystem>> {
         if let Some(dir) = env::var_os("CRAFT_TARGET_DIR") {
             Ok(Some(Filesystem::new(self.cwd.join(dir))))
-        } else if let Some(val) = try!(self.get_path("build.target-dir")) {
+        } else if let Some(val) = self.get_path("build.target-dir")? {
             let val = self.cwd.join(val.val);
             Ok(Some(Filesystem::new(val)))
         } else {
@@ -108,7 +107,7 @@ impl Config {
     }
 
     fn get(&self, key: &str) -> CraftResult<Option<ConfigValue>> {
-        let vals = try!(self.values());
+        let vals = self.values()?;
         let mut parts = key.split('.').enumerate();
         let mut val = match vals.get(parts.next().unwrap().1) {
             Some(val) => val,
@@ -152,7 +151,7 @@ impl Config {
         match env::var(&format!("CRAFT_{}", key)) {
             Ok(value) => {
                 Ok(Some(Value {
-                    val: try!(value.parse()),
+                    val: value.parse()?,
                     definition: Definition::Environment,
                 }))
             }
@@ -161,10 +160,10 @@ impl Config {
     }
 
     pub fn get_string(&self, key: &str) -> CraftResult<Option<Value<String>>> {
-        if let Some(v) = try!(self.get_env(key)) {
+        if let Some(v) = self.get_env(key)? {
             return Ok(Some(v));
         }
-        match try!(self.get(key)) {
+        match self.get(key)? {
             Some(CV::String(i, path)) => {
                 Ok(Some(Value {
                     val: i,
@@ -177,10 +176,10 @@ impl Config {
     }
 
     pub fn get_bool(&self, key: &str) -> CraftResult<Option<Value<bool>>> {
-        if let Some(v) = try!(self.get_env(key)) {
+        if let Some(v) = self.get_env(key)? {
             return Ok(Some(v));
         }
-        match try!(self.get(key)) {
+        match self.get(key)? {
             Some(CV::Boolean(b, path)) => {
                 Ok(Some(Value {
                     val: b,
@@ -193,7 +192,7 @@ impl Config {
     }
 
     pub fn get_path(&self, key: &str) -> CraftResult<Option<Value<PathBuf>>> {
-        if let Some(val) = try!(self.get_string(&key)) {
+        if let Some(val) = self.get_string(&key)? {
             let is_path = val.val.contains('/') || (cfg!(windows) && val.val.contains('\\'));
             let path = if is_path {
                 val.definition.root(self).join(val.val)
@@ -211,7 +210,7 @@ impl Config {
     }
 
     pub fn get_list(&self, key: &str) -> CraftResult<Option<Value<Vec<(String, PathBuf)>>>> {
-        match try!(self.get(key)) {
+        match self.get(key)? {
             Some(CV::List(i, path)) => {
                 Ok(Some(Value {
                     val: i,
@@ -224,7 +223,7 @@ impl Config {
     }
 
     pub fn get_table(&self, key: &str) -> CraftResult<Option<Value<HashMap<String, CV>>>> {
-        match try!(self.get(key)) {
+        match self.get(key)? {
             Some(CV::Table(i, path)) => {
                 Ok(Some(Value {
                     val: i,
@@ -237,10 +236,10 @@ impl Config {
     }
 
     pub fn get_i64(&self, key: &str) -> CraftResult<Option<Value<i64>>> {
-        if let Some(v) = try!(self.get_env(key)) {
+        if let Some(v) = self.get_env(key)? {
             return Ok(Some(v));
         }
-        match try!(self.get(key)) {
+        match self.get(key)? {
             Some(CV::Integer(i, path)) => {
                 Ok(Some(Value {
                     val: i,
@@ -253,7 +252,7 @@ impl Config {
     }
 
     pub fn net_retry(&self) -> CraftResult<i64> {
-        match try!(self.get_i64("net.retry")) {
+        match self.get_i64("net.retry")? {
             Some(v) => {
                 let value = v.val;
                 if value < 0 {
@@ -312,7 +311,7 @@ impl Config {
         };
 
         self.shell().set_verbosity(verbosity);
-        try!(self.shell().set_color_config(color.map(|s| &s[..])));
+        self.shell().set_color_config(color.map(|s| &s[..]))?;
         self.extra_verbose.set(extra_verbose);
         self.frozen.set(frozen);
         self.locked.set(locked);
@@ -335,20 +334,19 @@ impl Config {
     fn load_values(&self) -> CraftResult<HashMap<String, ConfigValue>> {
         let mut cfg = CV::Table(HashMap::new(), PathBuf::from("."));
 
-        try!(walk_tree(&self.cwd, |mut file, path| {
+        walk_tree(&self.cwd, |mut file, path| {
                 let mut contents = String::new();
-                try!(file.read_to_string(&mut contents));
-                let table = try!(craft_toml::parse(&contents, &path, self)
-                    .chain_error(|| human(format!("could not parse TOML configuration in `{}`", path.display()))));
+                file.read_to_string(&mut contents)?;
+                let table = craft_toml::parse(&contents, &path, self)
+                    .chain_error(|| human(format!("could not parse TOML configuration in `{}`", path.display())))?;
                 let toml = toml::Value::Table(table);
-                let value = try!(CV::from_toml(&path, toml).chain_error(|| {
-                    human(format!("failed to load TOML configuration from `{}`",
-                                  path.display()))
-                }));
-                try!(cfg.merge(value));
+                let value = CV::from_toml(&path, toml).chain_error(|| {
+                        human(format!("failed to load TOML configuration from `{}`",
+                                      path.display()))
+                    })?;
+                cfg.merge(value)?;
                 Ok(())
-            })
-            .chain_error(|| human("Couldn't load Craft configuration")));
+            }).chain_error(|| human("Couldn't load Craft configuration"))?;
 
 
         match cfg {
@@ -364,7 +362,7 @@ impl Config {
         }
 
         let var = format!("build.{}", tool);
-        if let Some(tool_path) = try!(self.get_path(&var)) {
+        if let Some(tool_path) = self.get_path(&var)? {
             return Ok(tool_path.val);
         }
 
@@ -404,12 +402,12 @@ impl fmt::Debug for ConfigValue {
             CV::Boolean(b, ref path) => write!(f, "{} (from {})", b, path.display()),
             CV::String(ref s, ref path) => write!(f, "{} (from {})", s, path.display()),
             CV::List(ref list, ref path) => {
-                try!(write!(f, "["));
+                write!(f, "[")?;
                 for (i, &(ref s, ref path)) in list.iter().enumerate() {
                     if i > 0 {
-                        try!(write!(f, ", "));
+                        write!(f, ", ")?;
                     }
-                    try!(write!(f, "{} (from {})", s, path.display()));
+                    write!(f, "{} (from {})", s, path.display())?;
                 }
                 write!(f, "] (from {})", path.display())
             }
@@ -440,24 +438,24 @@ impl ConfigValue {
             toml::Value::Boolean(b) => Ok(CV::Boolean(b, path.to_path_buf())),
             toml::Value::Integer(i) => Ok(CV::Integer(i, path.to_path_buf())),
             toml::Value::Array(val) => {
-                Ok(CV::List(try!(val.into_iter()
+                Ok(CV::List(val.into_iter()
                                 .map(|toml| {
                                     match toml {
                                         toml::Value::String(val) => Ok((val, path.to_path_buf())),
                                         v => Err(human(format!("expected string but found {} in list", v.type_str()))),
                                     }
                                 })
-                                .collect::<CraftResult<_>>()),
+                                .collect::<CraftResult<_>>()?,
                             path.to_path_buf()))
             }
             toml::Value::Table(val) => {
-                Ok(CV::Table(try!(val.into_iter()
+                Ok(CV::Table(val.into_iter()
                                  .map(|(key, value)| {
-                                     let value = try!(CV::from_toml(path, value)
-                                         .chain_error(|| human(format!("failed to parse key `{}`", key))));
+                                     let value = CV::from_toml(path, value)
+                                         .chain_error(|| human(format!("failed to parse key `{}`", key)))?;
                                      Ok((key, value))
                                  })
-                                 .collect::<CraftResult<_>>()),
+                                 .collect::<CraftResult<_>>()?,
                              path.to_path_buf()))
             }
             v => {
@@ -483,16 +481,15 @@ impl ConfigValue {
                         Occupied(mut entry) => {
                             let path = value.definition_path().to_path_buf();
                             let entry = entry.get_mut();
-                            try!(entry.merge(value).chain_error(|| {
-                                human(format!("failed to merge key `{}` between \
-                                               files:\n  \
-                                               file 1: {}\n  \
-                                               file 2: {}",
-                                              key,
-                                              entry.definition_path().display(),
-                                              path.display()))
+                            entry.merge(value)
+                                .chain_error(|| {
+                                    human(format!("failed to merge key `{}` between files:\n  file 1: {}\n  file 2: \
+                                                   {}",
+                                                  key,
+                                                  entry.definition_path().display(),
+                                                  path.display()))
 
-                            }));
+                                })?;
                         }
                         Vacant(entry) => {
                             entry.insert(value);
@@ -664,9 +661,9 @@ fn walk_tree<F>(pwd: &Path, mut walk: F) -> CraftResult<()>
     loop {
         let possible = current.join(".craft").join("config");
         if fs::metadata(&possible).is_ok() {
-            let file = try!(File::open(&possible));
+            let file = File::open(&possible)?;
 
-            try!(walk(file, &possible));
+            walk(file, &possible)?;
 
             stash.insert(possible);
         }
@@ -680,12 +677,14 @@ fn walk_tree<F>(pwd: &Path, mut walk: F) -> CraftResult<()>
     // Once we're done, also be sure to walk the home directory even if it's not
     // in our history to be sure we pick up that standard location for
     // information.
-    let home = try!(homedir(pwd)
-        .chain_error(|| human("Craft couldn't find your home directory. This probably means that $HOME was not set.")));
+    let home =
+        homedir(pwd).chain_error(|| {
+                human("Craft couldn't find your home directory. This probably means that $HOME was not set.")
+            })?;
     let config = home.join("config");
     if !stash.contains(&config) && fs::metadata(&config).is_ok() {
-        let file = try!(File::open(&config));
-        try!(walk(file, &config));
+        let file = File::open(&config)?;
+        walk(file, &config)?;
     }
 
     Ok(())
@@ -699,19 +698,19 @@ pub fn set_config(cfg: &Config, loc: Location, key: &str, value: ConfigValue) ->
     // 3. This blows away the previous ordering of a file.
     let mut file = match loc {
         Location::Global => {
-            try!(cfg.home_path.create_dir());
-            try!(cfg.home_path.open_rw(Path::new("config"), cfg, "the global config file"))
+            cfg.home_path.create_dir()?;
+            cfg.home_path.open_rw(Path::new("config"), cfg, "the global config file")?
         }
         Location::Project => unimplemented!(),
     };
     let mut contents = String::new();
     let _ = file.read_to_string(&mut contents);
-    let mut toml = try!(craft_toml::parse(&contents, file.path(), cfg));
+    let mut toml = craft_toml::parse(&contents, file.path(), cfg)?;
     toml.insert(key.to_string(), value.into_toml());
 
     let contents = toml::Value::Table(toml).to_string();
-    try!(file.seek(SeekFrom::Start(0)));
-    try!(file.write_all(contents.as_bytes()));
-    try!(file.file().set_len(contents.len() as u64));
+    file.seek(SeekFrom::Start(0))?;
+    file.write_all(contents.as_bytes())?;
+    file.file().set_len(contents.len() as u64)?;
     Ok(())
 }

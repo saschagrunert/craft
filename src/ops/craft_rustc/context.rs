@@ -70,13 +70,13 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         } else {
             "debug"
         };
-        let host_layout = try!(Layout::new(ws, None, &dest));
+        let host_layout = Layout::new(ws, None, &dest)?;
         let target_layout = match build_config.requested_target.as_ref() {
-            Some(target) => Some(try!(Layout::new(ws, Some(&target), &dest))),
+            Some(target) => Some(Layout::new(ws, Some(&target), &dest)?),
             None => None,
         };
 
-        let current_package = try!(ws.current()).package_id().clone();
+        let current_package = ws.current()?.package_id().clone();
         Ok(Context {
             host: host_layout,
             target: target_layout,
@@ -104,10 +104,10 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     pub fn prepare(&mut self) -> CraftResult<()> {
         let _p = profile::start("preparing layout");
 
-        try!(self.host.prepare().chain_error(|| internal(format!("couldn't prepare build directories"))));
+        self.host.prepare().chain_error(|| internal(format!("couldn't prepare build directories")))?;
         match self.target {
             Some(ref mut target) => {
-                try!(target.prepare().chain_error(|| internal(format!("couldn't prepare build directories"))));
+                target.prepare().chain_error(|| internal(format!("couldn't prepare build directories")))?;
             }
             None => {}
         }
@@ -130,13 +130,13 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         chest_types.insert("bin".to_string());
         chest_types.insert("rlib".to_string());
         for unit in units {
-            try!(self.visit_chest_type(unit, &mut chest_types));
+            self.visit_chest_type(unit, &mut chest_types)?;
         }
-        try!(self.probe_target_info_kind(&chest_types, Kind::Target));
+        self.probe_target_info_kind(&chest_types, Kind::Target)?;
         if self.requested_target().is_none() {
             self.host_info = self.target_info.clone();
         } else {
-            try!(self.probe_target_info_kind(&chest_types, Kind::Host));
+            self.probe_target_info_kind(&chest_types, Kind::Host)?;
         }
         Ok(())
     }
@@ -151,15 +151,15 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
                 }
             }));
         }
-        for dep in try!(self.dep_targets(&unit)) {
-            try!(self.visit_chest_type(&dep, chest_types));
+        for dep in self.dep_targets(&unit)? {
+            self.visit_chest_type(&dep, chest_types)?;
         }
         Ok(())
     }
 
     fn probe_target_info_kind(&mut self, chest_types: &BTreeSet<String>, kind: Kind) -> CraftResult<()> {
-        let rustflags = try!(env_args(self.config, &self.build_config, kind, "RUSTFLAGS"));
-        let mut process = try!(self.config.rustc()).process();
+        let rustflags = env_args(self.config, &self.build_config, kind, "RUSTFLAGS")?;
+        let mut process = self.config.rustc()?.process();
         process.arg("-")
             .arg("--crate-name")
             .arg("_")
@@ -178,12 +178,12 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         with_cfg.arg("--print=cfg");
 
         let mut has_cfg = true;
-        let output = try!(with_cfg.exec_with_output()
+        let output = with_cfg.exec_with_output()
             .or_else(|_| {
                 has_cfg = false;
                 process.exec_with_output()
             })
-            .chain_error(|| human(format!("failed to run `rustc` to learn about target-specific information"))));
+            .chain_error(|| human(format!("failed to run `rustc` to learn about target-specific information")))?;
 
         let error = str::from_utf8(&output.stderr).unwrap();
         let output = str::from_utf8(&output.stdout).unwrap();
@@ -211,7 +211,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         }
 
         let cfg = if has_cfg {
-            Some(try!(lines.map(Cfg::from_str).collect()))
+            Some(lines.map(Cfg::from_str).collect()?)
         } else {
             None
         };
@@ -233,7 +233,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     pub fn build_used_in_plugin_map(&mut self, units: &[Unit<'a>]) -> CraftResult<()> {
         let mut visited = HashSet::new();
         for unit in units {
-            try!(self.walk_used_in_plugin_map(unit, unit.target.for_host(), &mut visited));
+            self.walk_used_in_plugin_map(unit, unit.target.for_host(), &mut visited)?;
         }
         Ok(())
     }
@@ -249,8 +249,8 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         if is_plugin {
             self.used_in_plugin.insert(*unit);
         }
-        for unit in try!(self.dep_targets(unit)) {
-            try!(self.walk_used_in_plugin_map(&unit, is_plugin || unit.target.for_host(), visited));
+        for unit in self.dep_targets(unit)? {
+            self.walk_used_in_plugin_map(&unit, is_plugin || unit.target.for_host(), visited)?;
         }
         Ok(())
     }
@@ -386,14 +386,14 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             match *unit.target.kind() {
                 TargetKind::Example | TargetKind::Bin | TargetKind::CustomBuild | TargetKind::Bench |
                 TargetKind::Test => {
-                    try!(add("bin", false));
+                    add("bin", false)?;
                 }
                 TargetKind::Lib(..) if unit.profile.test => {
-                    try!(add("bin", false));
+                    add("bin", false)?;
                 }
                 TargetKind::Lib(ref libs) => {
                     for lib in libs {
-                        try!(add(lib.chest_type(), lib.linkable()));
+                        add(lib.chest_type(), lib.linkable())?;
                     }
                 }
             }
@@ -425,7 +425,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
 
         let id = unit.pkg.package_id();
         let deps = self.resolve.deps(id);
-        let mut ret = try!(deps.filter(|dep| {
+        let mut ret = deps.filter(|dep| {
                 unit.pkg
                     .dependencies()
                     .iter()
@@ -480,7 +480,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
                     Err(e) => Some(Err(e)),
                 }
             })
-            .collect::<CraftResult<Vec<_>>>());
+            .collect::<CraftResult<Vec<_>>>()?;
 
         // If this target is a build script, then what we've collected so far is
         // all we need. If this isn't a build script, then it depends on the
@@ -541,7 +541,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             profile: &self.profiles.dev,
             ..*unit
         };
-        let deps = try!(self.dep_targets(&tmp));
+        let deps = self.dep_targets(&tmp)?;
         Ok(deps.iter()
             .filter_map(|unit| {
                 if !unit.target.linkable() || unit.pkg.manifest().links().is_none() {
@@ -580,7 +580,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         // the documentation of the library being built.
         let mut ret = Vec::new();
         for dep in deps {
-            let dep = try!(dep);
+            let dep = dep?;
             let lib = match dep.targets().iter().find(|t| t.is_lib()) {
                 Some(lib) => lib,
                 None => continue,
@@ -764,14 +764,14 @@ fn env_args(config: &Config, build_config: &BuildConfig, kind: Kind, name: &str)
     // Then the target.*.rustflags value
     let target = build_config.requested_target.as_ref().unwrap_or(&build_config.host_triple);
     let key = format!("target.{}.{}", target, name);
-    if let Some(args) = try!(config.get_list(&key)) {
+    if let Some(args) = config.get_list(&key)? {
         let args = args.val.into_iter().map(|a| a.0);
         return Ok(args.collect());
     }
 
     // Then the build.rustflags value
     let key = format!("build.{}", name);
-    if let Some(args) = try!(config.get_list(&key)) {
+    if let Some(args) = config.get_list(&key)? {
         let args = args.val.into_iter().map(|a| a.0);
         return Ok(args.collect());
     }

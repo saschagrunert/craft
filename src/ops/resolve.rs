@@ -15,12 +15,12 @@ use workspace::Workspace;
 /// This function will also write the result of resolution as a new
 /// lockfile.
 pub fn resolve_ws(registry: &mut PackageRegistry, ws: &Workspace) -> CraftResult<Resolve> {
-    let prev = try!(ops::load_pkg_lockfile(ws));
-    let resolve = try!(resolve_with_previous(registry, ws, Method::Everything, prev.as_ref(), None, &[]));
+    let prev = ops::load_pkg_lockfile(ws)?;
+    let resolve = resolve_with_previous(registry, ws, Method::Everything, prev.as_ref(), None, &[])?;
 
     // Avoid writing a lockfile if we are `craft install`ing a non local package.
     if ws.current_opt().map(|pkg| pkg.package_id().source_id().is_path()).unwrap_or(true) {
-        try!(ops::write_pkg_lockfile(ws, &resolve));
+        ops::write_pkg_lockfile(ws, &resolve)?;
     }
     Ok(resolve)
 }
@@ -89,9 +89,9 @@ pub fn resolve_with_previous<'a>(registry: &mut PackageRegistry,
 
     let mut summaries = Vec::new();
     for member in ws.members() {
-        try!(registry.add_sources(&[member.package_id()
-                                        .source_id()
-                                        .clone()]));
+        registry.add_sources(&[member.package_id()
+                               .source_id()
+                               .clone()])?;
 
         // If we're resolving everything then we include all members of the
         // workspace. If we want a specific set of requirements and we're
@@ -130,9 +130,9 @@ pub fn resolve_with_previous<'a>(registry: &mut PackageRegistry,
         None => root_replace.to_vec(),
     };
 
-    let mut resolved = try!(resolver::resolve(&summaries, &replace, registry));
+    let mut resolved = resolver::resolve(&summaries, &replace, registry)?;
     if let Some(previous) = previous {
-        try!(resolved.merge_from(previous));
+        resolved.merge_from(previous)?;
     }
     return Ok(resolved);
 

@@ -104,7 +104,7 @@ impl DependencyInner {
                  deprecated_extra: Option<(&PackageId, &Config)>)
                  -> CraftResult<DependencyInner> {
         let (specified_req, version_req) = match version {
-            Some(v) => (true, try!(DependencyInner::parse_with_deprecated(v, deprecated_extra))),
+            Some(v) => (true, DependencyInner::parse_with_deprecated(v, deprecated_extra)?),
             None => (false, VersionReq::any()),
         };
 
@@ -140,7 +140,7 @@ this warning.
                                           inside.name(),
                                           inside.version(),
                                           requirement);
-                        try!(config.shell().warn(&msg));
+                        config.shell().warn(&msg)?;
 
                         Ok(requirement)
                     }

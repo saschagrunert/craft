@@ -75,8 +75,8 @@ impl Package {
 
     pub fn for_path(manifest_path: &Path, config: &Config) -> CraftResult<Package> {
         let path = manifest_path.parent().unwrap();
-        let source_id = try!(SourceId::for_path(path));
-        let (pkg, _) = try!(ops::read_package(&manifest_path, &source_id, config));
+        let source_id = SourceId::for_path(path)?;
+        let (pkg, _) = ops::read_package(&manifest_path, &source_id, config)?;
         Ok(pkg)
     }
 
@@ -190,18 +190,18 @@ impl<'cfg> PackageSet<'cfg> {
     }
 
     pub fn get(&self, id: &PackageId) -> CraftResult<&Package> {
-        let slot = try!(self.packages
+        let slot = self.packages
             .iter()
             .find(|p| p.0 == *id)
-            .chain_error(|| internal(format!("couldn't find `{}` in package set", id))));
+            .chain_error(|| internal(format!("couldn't find `{}` in package set", id)))?;
         let slot = &slot.1;
         if let Some(pkg) = slot.borrow() {
             return Ok(pkg);
         }
         let mut sources = self.sources.borrow_mut();
-        let source = try!(sources.get_mut(id.source_id())
-            .chain_error(|| internal(format!("couldn't find source for `{}`", id))));
-        let pkg = try!(source.download(id).chain_error(|| human("unable to get packages from source")));
+        let source = sources.get_mut(id.source_id())
+            .chain_error(|| internal(format!("couldn't find source for `{}`", id)))?;
+        let pkg = source.download(id).chain_error(|| human("unable to get packages from source"))?;
         assert!(slot.fill(pkg).is_ok());
         Ok(slot.borrow().unwrap())
     }

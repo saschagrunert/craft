@@ -55,7 +55,7 @@ impl<'cfg> RegistryData for LocalRegistry<'cfg> {
 
     fn download(&mut self, pkg: &PackageId, checksum: &str) -> CraftResult<FileLock> {
         let chest_file = format!("{}-{}.chest", pkg.name(), pkg.version());
-        let mut chest_file = try!(self.root.open_ro(&chest_file, self.config, "chest file"));
+        let mut chest_file = self.root.open_ro(&chest_file, self.config, "chest file")?;
 
         // If we've already got an unpacked version of this chest, then skip the
         // checksum below as it is in theory already verified.
@@ -64,15 +64,15 @@ impl<'cfg> RegistryData for LocalRegistry<'cfg> {
             return Ok(chest_file);
         }
 
-        try!(self.config.shell().status("Unpacking", pkg));
+        self.config.shell().status("Unpacking", pkg)?;
 
         // We don't actually need to download anything per-se, we just need to
         // verify the checksum matches the .chest file itself.
         let mut state = Sha256::new();
         let mut buf = [0; 64 * 1024];
         loop {
-            let n = try!(chest_file.read(&mut buf)
-                .chain_error(|| human(format!("failed to read `{}`", chest_file.path().display()))));
+            let n = chest_file.read(&mut buf)
+                .chain_error(|| human(format!("failed to read `{}`", chest_file.path().display())))?;
             if n == 0 {
                 break;
             }
@@ -82,7 +82,7 @@ impl<'cfg> RegistryData for LocalRegistry<'cfg> {
             bail!("failed to verify the checksum of `{}`", pkg)
         }
 
-        try!(chest_file.seek(SeekFrom::Start(0)));
+        chest_file.seek(SeekFrom::Start(0))?;
 
         Ok(chest_file)
     }

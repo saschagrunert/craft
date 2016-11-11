@@ -235,10 +235,10 @@ unable to verify that `{0}` is the same as when the lockfile was generated
 
 impl fmt::Debug for Resolve {
     fn fmt(&self, fmt: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(fmt, "graph: {:?}\n", self.graph));
-        try!(write!(fmt, "\nfeatures: {{\n"));
+        write!(fmt, "graph: {:?}\n", self.graph)?;
+        write!(fmt, "\nfeatures: {{\n")?;
         for (pkg, features) in &self.features {
-            try!(write!(fmt, "  {}: {:?}\n", pkg, features));
+            write!(fmt, "  {}: {:?}\n", pkg, features)?;
         }
         write!(fmt, "}}")
     }
@@ -285,7 +285,7 @@ pub fn resolve(summaries: &[(Summary, Method)],
         replacements: replacements,
     };
     let _p = profile::start(format!("resolving"));
-    let cx = try!(activate_deps_loop(cx, registry, summaries));
+    let cx = activate_deps_loop(cx, registry, summaries)?;
 
     let mut resolve = Resolve {
         graph: cx.resolve_graph,
@@ -300,7 +300,7 @@ pub fn resolve(summaries: &[(Summary, Method)],
         resolve.checksums.insert(summary.package_id().clone(), cksum);
     }
 
-    try!(check_cycles(&resolve, &cx.activations));
+    check_cycles(&resolve, &cx.activations)?;
 
     trace!("resolved: {:?}", resolve);
     Ok(resolve)
@@ -345,7 +345,7 @@ fn activate(cx: &mut Context,
         }
     };
 
-    let deps = try!(cx.build_deps(registry, &candidate, method));
+    let deps = cx.build_deps(registry, &candidate, method)?;
 
     Ok(Some(DepsFrame {
         parent: candidate,
@@ -467,7 +467,7 @@ fn activate_deps_loop<'a>(mut cx: Context<'a>,
             summary: summary,
             replace: None,
         };
-        remaining_deps.extend(try!(activate(&mut cx, registry, None, candidate, method)));
+        remaining_deps.extend(activate(&mut cx, registry, None, candidate, method)?);
     }
 
     // Main resolution loop, this is the workhorse of the resolution algorithm.
@@ -587,7 +587,7 @@ fn activate_deps_loop<'a>(mut cx: Context<'a>,
                cur,
                dep.name(),
                candidate.summary.version());
-        remaining_deps.extend(try!(activate(&mut cx, registry, Some(&parent), candidate, &method)));
+        remaining_deps.extend(activate(&mut cx, registry, Some(&parent), candidate, &method)?);
     }
 
     Ok(cx)
@@ -742,15 +742,15 @@ fn build_features(s: &Summary, method: &Method) -> CraftResult<(HashMap<String, 
     match *method {
         Method::Everything => {
             for key in s.features().keys() {
-                try!(add_feature(s, key, &mut deps, &mut used, &mut visited));
+                add_feature(s, key, &mut deps, &mut used, &mut visited)?;
             }
             for dep in s.dependencies().iter().filter(|d| d.is_optional()) {
-                try!(add_feature(s, dep.name(), &mut deps, &mut used, &mut visited));
+                add_feature(s, dep.name(), &mut deps, &mut used, &mut visited)?;
             }
         }
         Method::Required { features: requested_features, .. } => {
             for feat in requested_features.iter() {
-                try!(add_feature(s, feat, &mut deps, &mut used, &mut visited));
+                add_feature(s, feat, &mut deps, &mut used, &mut visited)?;
             }
         }
     }
@@ -758,7 +758,7 @@ fn build_features(s: &Summary, method: &Method) -> CraftResult<(HashMap<String, 
         Method::Everything |
         Method::Required { uses_default_features: true, .. } => {
             if s.features().get("default").is_some() {
-                try!(add_feature(s, "default", &mut deps, &mut used, &mut visited));
+                add_feature(s, "default", &mut deps, &mut used, &mut visited)?;
             }
         }
         Method::Required { uses_default_features: false, .. } => {}
@@ -801,7 +801,7 @@ fn build_features(s: &Summary, method: &Method) -> CraftResult<(HashMap<String, 
                 match s.features().get(feat) {
                     Some(recursive) => {
                         for f in recursive {
-                            try!(add_feature(s, f, deps, used, visited));
+                            add_feature(s, f, deps, used, visited)?;
                         }
                     }
                     None => {
@@ -852,19 +852,19 @@ impl<'a> Context<'a> {
         // First, figure out our set of dependencies based on the requsted set
         // of features. This also calculates what features we're going to enable
         // for our own dependencies.
-        let deps = try!(self.resolve_features(candidate, method));
+        let deps = self.resolve_features(candidate, method)?;
 
         // Next, transform all dependencies into a list of possible candidates
         // which can satisfy that dependency.
-        let mut deps = try!(deps.into_iter()
+        let mut deps = deps.into_iter()
             .map(|(dep, features)| {
-                let mut candidates = try!(self.query(registry, &dep));
+                let mut candidates = self.query(registry, &dep)?;
                 // When we attempt versions for a package, we'll want to start at
                 // the maximum version and work our way down.
                 candidates.sort_by(|a, b| b.summary.version().cmp(a.summary.version()));
                 Ok((dep, candidates, features))
             })
-            .collect::<CraftResult<Vec<DepInfo>>>());
+            .collect::<CraftResult<Vec<DepInfo>>>()?;
 
         // Attempt to resolve dependencies with fewer candidates before trying
         // dependencies with more candidates.  This way if the dependency with
@@ -882,7 +882,7 @@ impl<'a> Context<'a> {
     /// applied by performing a second query for what the override should
     /// return.
     fn query(&self, registry: &mut Registry, dep: &Dependency) -> CraftResult<Vec<Candidate>> {
-        let summaries = try!(registry.query(dep));
+        let summaries = registry.query(dep)?;
         summaries.into_iter()
             .map(Rc::new)
             .map(|summary| {
@@ -904,14 +904,15 @@ impl<'a> Context<'a> {
                 };
                 debug!("found an override for {} {}", dep.name(), dep.version_req());
 
-                let mut summaries = try!(registry.query(dep)).into_iter();
-                let s = try!(summaries.next().chain_error(|| {
-                    human(format!("no matching package for override `{}` found\nlocation searched: {}\nversion \
-                                   required: {}",
-                                  spec,
-                                  dep.source_id(),
-                                  dep.version_req()))
-                }));
+                let mut summaries = registry.query(dep)?.into_iter();
+                let s = summaries.next()
+                    .chain_error(|| {
+                        human(format!("no matching package for override `{}` found\nlocation searched: {}\nversion \
+                                       required: {}",
+                                      spec,
+                                      dep.source_id(),
+                                      dep.version_req()))
+                    })?;
                 let summaries = summaries.collect::<Vec<_>>();
                 if summaries.len() > 0 {
                     let bullets = summaries.iter()
@@ -977,7 +978,7 @@ impl<'a> Context<'a> {
         let deps = candidate.dependencies();
         let deps = deps.iter().filter(|d| d.is_transitive() || dev_deps);
 
-        let (mut feature_deps, used_features) = try!(build_features(candidate, method));
+        let (mut feature_deps, used_features) = build_features(candidate, method)?;
         let mut ret = Vec::new();
 
         // Next, sanitize all requested features by whitelisting all the
@@ -1037,7 +1038,7 @@ fn check_cycles(resolve: &Resolve, activations: &HashMap<(String, SourceId), Vec
     let mut checked = HashSet::new();
     for pkg in all_packages {
         if !checked.contains(pkg) {
-            try!(visit(resolve, pkg, &summaries, &mut HashSet::new(), &mut checked))
+            visit(resolve, pkg, &summaries, &mut HashSet::new(), &mut checked)?
         }
     }
     return Ok(());
@@ -1071,7 +1072,7 @@ fn check_cycles(resolve: &Resolve, activations: &HashMap<(String, SourceId), Vec
                 } else {
                     &mut empty
                 };
-                try!(visit(resolve, dep, summaries, visited, checked));
+                visit(resolve, dep, summaries, visited, checked)?;
             }
         }
 

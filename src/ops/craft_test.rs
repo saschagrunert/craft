@@ -12,15 +12,15 @@ pub struct TestOptions<'a> {
 }
 
 pub fn run_tests(ws: &Workspace, options: &TestOptions, test_args: &[String]) -> CraftResult<Option<CraftTestError>> {
-    let compilation = try!(compile_tests(ws, options));
+    let compilation = compile_tests(ws, options)?;
 
     if options.no_run {
         return Ok(None);
     }
     let mut errors = if options.only_doc {
-        try!(run_doc_tests(options, test_args, &compilation))
+        run_doc_tests(options, test_args, &compilation)?
     } else {
-        try!(run_unit_tests(options, test_args, &compilation))
+        run_unit_tests(options, test_args, &compilation)?
     };
 
     // If we have an error and want to fail fast, return
@@ -37,7 +37,7 @@ pub fn run_tests(ws: &Workspace, options: &TestOptions, test_args: &[String]) ->
         }
     }
 
-    errors.extend(try!(run_doc_tests(options, test_args, &compilation)));
+    errors.extend(run_doc_tests(options, test_args, &compilation)?);
     if errors.is_empty() {
         Ok(None)
     } else {
@@ -48,12 +48,12 @@ pub fn run_tests(ws: &Workspace, options: &TestOptions, test_args: &[String]) ->
 pub fn run_benches(ws: &Workspace, options: &TestOptions, args: &[String]) -> CraftResult<Option<CraftTestError>> {
     let mut args = args.to_vec();
     args.push("--bench".to_string());
-    let compilation = try!(compile_tests(ws, options));
+    let compilation = compile_tests(ws, options)?;
 
     if options.no_run {
         return Ok(None);
     }
-    let errors = try!(run_unit_tests(options, &args, &compilation));
+    let errors = run_unit_tests(options, &args, &compilation)?;
     match errors.len() {
         0 => Ok(None),
         _ => Ok(Some(CraftTestError::new(errors))),
@@ -61,7 +61,7 @@ pub fn run_benches(ws: &Workspace, options: &TestOptions, args: &[String]) -> Cr
 }
 
 fn compile_tests<'a>(ws: &Workspace<'a>, options: &TestOptions<'a>) -> CraftResult<Compilation<'a>> {
-    let mut compilation = try!(ops::compile(ws, &options.compile_opts));
+    let mut compilation = ops::compile(ws, &options.compile_opts)?;
     compilation.tests.sort_by(|a, b| (a.0.package_id(), &a.1).cmp(&(b.0.package_id(), &b.1)));
     Ok(compilation)
 }
@@ -81,10 +81,10 @@ fn run_unit_tests(options: &TestOptions,
             Some(path) => path,
             None => &**exe,
         };
-        let mut cmd = try!(compilation.target_process(exe, pkg));
+        let mut cmd = compilation.target_process(exe, pkg)?;
         cmd.args(test_args);
-        try!(config.shell().concise(|shell| shell.status("Running", to_display.display().to_string())));
-        try!(config.shell().verbose(|shell| shell.status("Running", cmd.to_string())));
+        config.shell().concise(|shell| shell.status("Running", to_display.display().to_string()))?;
+        config.shell().verbose(|shell| shell.status("Running", cmd.to_string()))?;
 
         if let Err(e) = cmd.exec() {
             errors.push(e);
@@ -104,7 +104,7 @@ fn run_doc_tests(options: &TestOptions,
     let config = options.compile_opts.config;
 
     // We don't build/rust doctests if target != host
-    if try!(config.rustc()).host != compilation.target {
+    if config.rustc()?.host != compilation.target {
         return Ok(errors);
     }
 
@@ -118,8 +118,8 @@ fn run_doc_tests(options: &TestOptions,
 
     for (package, tests) in libs {
         for (lib, name, chest_name) in tests {
-            try!(config.shell().status("Doc-tests", name));
-            let mut p = try!(compilation.rustdoc_process(package));
+            config.shell().status("Doc-tests", name)?;
+            let mut p = compilation.rustdoc_process(package)?;
             p.arg("--test")
                 .arg(lib)
                 .arg("--crate-name")
@@ -166,7 +166,7 @@ fn run_doc_tests(options: &TestOptions,
                 }
             }
 
-            try!(config.shell().verbose(|shell| shell.status("Running", p.to_string())));
+            config.shell().verbose(|shell| shell.status("Running", p.to_string()))?;
             if let Err(e) = p.exec() {
                 errors.push(e);
                 if !options.no_fail_fast {

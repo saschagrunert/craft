@@ -9,13 +9,15 @@ use util::{CraftResult, Config, errors};
 /// Closure must return a CraftResult.
 ///
 /// Example:
+/// ```
 /// use util::network;
 /// craft_result = network.with_retry(&config, || something.download());
+/// ```
 pub fn with_retry<T, E, F>(config: &Config, mut callback: F) -> CraftResult<T>
     where F: FnMut() -> Result<T, E>,
           E: errors::NetworkError
 {
-    let mut remaining = try!(config.net_retry());
+    let mut remaining = config.net_retry()?;
     loop {
         match callback() {
             Ok(ret) => return Ok(ret),
@@ -23,7 +25,7 @@ pub fn with_retry<T, E, F>(config: &Config, mut callback: F) -> CraftResult<T>
                 let msg = format!("spurious network error ({} tries remaining): {}",
                                   remaining,
                                   e);
-                try!(config.shell().warn(msg));
+                config.shell().warn(msg)?;
                 remaining -= 1;
             }
             Err(e) => return Err(Box::new(e)),

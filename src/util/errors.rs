@@ -229,9 +229,9 @@ struct ConcreteCraftError {
 
 impl fmt::Display for ConcreteCraftError {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        try!(write!(f, "{}", self.description));
+        write!(f, "{}", self.description)?;
         if let Some(ref s) = self.detail {
-            try!(write!(f, " ({})", s));
+            write!(f, " ({})", s)?;
         }
         Ok(())
     }

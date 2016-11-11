@@ -41,7 +41,7 @@ impl<'cfg> RegistryIndex<'cfg> {
             return Ok(s.clone());
         }
         // Ok, we're missing the key, so parse the index file to load it.
-        try!(self.summaries(pkg.name()));
+        self.summaries(pkg.name())?;
         self.hashes
             .get(&key)
             .chain_error(|| internal(format!("no hash listed for {}", pkg)))
@@ -56,7 +56,7 @@ impl<'cfg> RegistryIndex<'cfg> {
         if self.cache.contains_key(name) {
             return Ok(self.cache.get(name).unwrap());
         }
-        let summaries = try!(self.load_summaries(name));
+        let summaries = self.load_summaries(name)?;
         let summaries = summaries.into_iter()
             .filter(|summary| summary.0.package_id().name() == name)
             .collect();
@@ -93,7 +93,7 @@ impl<'cfg> RegistryIndex<'cfg> {
         match File::open(&path) {
             Ok(mut f) => {
                 let mut contents = String::new();
-                try!(f.read_to_string(&mut contents));
+                f.read_to_string(&mut contents)?;
                 let ret: CraftResult<Vec<(Summary, bool)>>;
                 ret = contents.lines()
                     .filter(|l| l.trim().len() > 0)
@@ -110,13 +110,13 @@ impl<'cfg> RegistryIndex<'cfg> {
     ///
     /// The returned boolean is whether or not the summary has been yanked.
     fn parse_registry_package(&mut self, line: &str) -> CraftResult<(Summary, bool)> {
-        let RegistryPackage { name, vers, cksum, deps, features, yanked } = try!(json::decode::<RegistryPackage>(line));
-        let pkgid = try!(PackageId::new(&name, &vers, &self.source_id));
+        let RegistryPackage { name, vers, cksum, deps, features, yanked } = json::decode::<RegistryPackage>(line)?;
+        let pkgid = PackageId::new(&name, &vers, &self.source_id)?;
         let deps: CraftResult<Vec<Dependency>> = deps.into_iter()
             .map(|dep| self.parse_registry_dependency(dep))
             .collect();
-        let deps = try!(deps);
-        let summary = try!(Summary::new(pkgid, deps, features));
+        let deps = deps?;
+        let summary = Summary::new(pkgid, deps, features)?;
         let summary = summary.set_checksum(cksum.clone());
         self.hashes.insert((name, vers), cksum);
         Ok((summary, yanked.unwrap_or(false)))
@@ -126,7 +126,7 @@ impl<'cfg> RegistryIndex<'cfg> {
     fn parse_registry_dependency(&self, dep: RegistryDependency) -> CraftResult<Dependency> {
         let RegistryDependency { name, req, features, optional, default_features, target, kind } = dep;
 
-        let dep = try!(DependencyInner::parse(&name, Some(&req), &self.source_id, None));
+        let dep = DependencyInner::parse(&name, Some(&req), &self.source_id, None)?;
         let kind = match kind.as_ref().map(|s| &s[..]).unwrap_or("") {
             "dev" => Kind::Development,
             "build" => Kind::Build,
@@ -134,7 +134,7 @@ impl<'cfg> RegistryIndex<'cfg> {
         };
 
         let platform = match target {
-            Some(target) => Some(try!(target.parse())),
+            Some(target) => Some(target.parse()?),
             None => None,
         };
 
@@ -157,7 +157,7 @@ impl<'cfg> RegistryIndex<'cfg> {
 impl<'cfg> Registry for RegistryIndex<'cfg> {
     fn query(&mut self, dep: &Dependency) -> CraftResult<Vec<Summary>> {
         let mut summaries = {
-            let summaries = try!(self.summaries(dep.name()));
+            let summaries = self.summaries(dep.name())?;
             summaries.iter()
                 .filter(|&&(_, yanked)| dep.source_id().precise().is_some() || !yanked)
                 .map(|s| s.0.clone())

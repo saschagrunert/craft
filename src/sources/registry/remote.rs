@@ -43,10 +43,10 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
     }
 
     fn config(&self) -> CraftResult<Option<RegistryConfig>> {
-        let lock = try!(self.index_path.open_ro(Path::new(INDEX_LOCK), self.config, "the registry index"));
+        let lock = self.index_path.open_ro(Path::new(INDEX_LOCK), self.config, "the registry index")?;
         let path = lock.path().parent().unwrap();
-        let contents = try!(paths::read(&path.join("config.json")));
-        let config = try!(json::decode(&contents));
+        let contents = paths::read(&path.join("config.json"))?;
+        let config = json::decode(&contents)?;
         Ok(Some(config))
     }
 
@@ -57,26 +57,26 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
         //
         // This way if there's a problem the error gets printed before we even
         // hit the index, which may not actually read this configuration.
-        try!(http_handle(self.config));
+        http_handle(self.config)?;
 
         // Then we actually update the index
-        try!(self.index_path.create_dir());
-        let lock = try!(self.index_path.open_rw(Path::new(INDEX_LOCK), self.config, "the registry index"));
+        self.index_path.create_dir()?;
+        let lock = self.index_path.open_rw(Path::new(INDEX_LOCK), self.config, "the registry index")?;
         let path = lock.path().parent().unwrap();
 
-        try!(self.config.shell().status("Updating", format!("registry `{}`", self.source_id.url())));
+        self.config.shell().status("Updating", format!("registry `{}`", self.source_id.url()))?;
 
-        let repo = try!(git2::Repository::open(path).or_else(|_| {
-            let _ = lock.remove_siblings();
-            git2::Repository::init(path)
-        }));
+        let repo = git2::Repository::open(path).or_else(|_| {
+                let _ = lock.remove_siblings();
+                git2::Repository::init(path)
+            })?;
 
         if self.source_id.url().host_str() == Some("github.com") {
             if let Ok(oid) = repo.refname_to_id("refs/heads/master") {
                 let handle = match self.handle {
                     Some(ref mut handle) => handle,
                     None => {
-                        self.handle = Some(try!(http_handle(self.config)));
+                        self.handle = Some(http_handle(self.config)?);
                         self.handle.as_mut().unwrap()
                     }
                 };
@@ -92,30 +92,29 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
         let url = self.source_id.url().to_string();
         let refspec = "refs/heads/*:refs/remotes/origin/*";
 
-        try!(git::fetch(&repo, &url, refspec, &self.config)
-            .chain_error(|| human(format!("failed to fetch `{}`", url))));
+        git::fetch(&repo, &url, refspec, &self.config).chain_error(|| human(format!("failed to fetch `{}`", url)))?;
 
         // git reset --hard origin/master
         let reference = "refs/remotes/origin/master";
-        let oid = try!(repo.refname_to_id(reference));
+        let oid = repo.refname_to_id(reference)?;
         trace!("[{}] updating to rev {}", self.source_id, oid);
-        let object = try!(repo.find_object(oid, None));
-        try!(repo.reset(&object, git2::ResetType::Hard, None));
+        let object = repo.find_object(oid, None)?;
+        repo.reset(&object, git2::ResetType::Hard, None)?;
         Ok(())
     }
 
     fn download(&mut self, pkg: &PackageId, checksum: &str) -> CraftResult<FileLock> {
         let filename = format!("{}-{}.chest", pkg.name(), pkg.version());
         let path = Path::new(&filename);
-        let mut dst = try!(self.cache_path.open_rw(path, self.config, &filename));
-        let meta = try!(dst.file().metadata());
+        let mut dst = self.cache_path.open_rw(path, self.config, &filename)?;
+        let meta = dst.file().metadata()?;
         if meta.len() > 0 {
             return Ok(dst);
         }
-        try!(self.config.shell().status("Downloading", pkg));
+        self.config.shell().status("Downloading", pkg)?;
 
-        let config = try!(self.config()).unwrap();
-        let mut url = try!(config.dl.to_url());
+        let config = self.config()?.unwrap();
+        let mut url = config.dl.to_url()?;
         url.path_segments_mut()
             .unwrap()
             .push(pkg.name())
@@ -125,25 +124,25 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
         let handle = match self.handle {
             Some(ref mut handle) => handle,
             None => {
-                self.handle = Some(try!(http_handle(self.config)));
+                self.handle = Some(http_handle(self.config)?);
                 self.handle.as_mut().unwrap()
             }
         };
-        try!(handle.get(true));
-        try!(handle.url(&url.to_string()));
-        try!(handle.follow_location(true));
+        handle.get(true)?;
+        handle.url(&url.to_string())?;
+        handle.follow_location(true)?;
         let mut state = Sha256::new();
         let mut body = Vec::new();
         {
             let mut handle = handle.transfer();
-            try!(handle.write_function(|buf| {
-                state.update(buf);
-                body.extend_from_slice(buf);
-                Ok(buf.len())
-            }));
-            try!(network::with_retry(self.config, || handle.perform()))
+            handle.write_function(|buf| {
+                    state.update(buf);
+                    body.extend_from_slice(buf);
+                    Ok(buf.len())
+                })?;
+            network::with_retry(self.config, || handle.perform())?
         }
-        let code = try!(handle.response_code());
+        let code = handle.response_code()?;
         if code != 200 && code != 0 {
             bail!("failed to get 200 response from `{}`, got {}", url, code)
         }
@@ -153,8 +152,8 @@ impl<'cfg> RegistryData for RemoteRegistry<'cfg> {
             bail!("failed to verify the checksum of `{}`", pkg)
         }
 
-        try!(dst.write_all(&body));
-        try!(dst.seek(SeekFrom::Start(0)));
+        dst.write_all(&body)?;
+        dst.seek(SeekFrom::Start(0))?;
         Ok(dst)
     }
 }
@@ -185,9 +184,9 @@ fn github_up_to_date(handle: &mut Easy, url: &Url, oid: &git2::Oid) -> bool {
 
     // This expects github urls in the form `github.com/user/repo` and nothing
     // else
-    let mut pieces = try!(url.path_segments());
-    let username = try!(pieces.next());
-    let repo = try!(pieces.next());
+    let mut pieces = url.path_segments()?;
+    let username = pieces.next()?;
+    let repo = pieces.next()?;
     if pieces.next().is_some() {
         return false;
     }
@@ -195,16 +194,16 @@ fn github_up_to_date(handle: &mut Easy, url: &Url, oid: &git2::Oid) -> bool {
     let url = format!("https://api.github.com/repos/{}/{}/commits/master",
                       username,
                       repo);
-    try!(handle.get(true).ok());
-    try!(handle.url(&url).ok());
-    try!(handle.useragent("craft").ok());
+    handle.get(true).ok()?;
+    handle.url(&url).ok()?;
+    handle.useragent("craft").ok()?;
     let mut headers = List::new();
-    try!(headers.append("Accept: application/vnd.github.3.sha").ok());
-    try!(headers.append(&format!("If-None-Match: \"{}\"", oid)).ok());
-    try!(handle.http_headers(headers).ok());
-    try!(handle.perform().ok());
+    headers.append("Accept: application/vnd.github.3.sha").ok()?;
+    headers.append(&format!("If-None-Match: \"{}\"", oid)).ok()?;
+    handle.http_headers(headers).ok()?;
+    handle.perform().ok()?;
 
-    try!(handle.response_code().ok()) == 304
+    handle.response_code().ok()? == 304
 }
 
 /// Create a new HTTP handle with appropriate global configuration for craft.
@@ -219,18 +218,18 @@ pub fn http_handle(config: &Config) -> CraftResult<Easy> {
     // connect phase as well as a "low speed" timeout so if we don't receive
     // many bytes in a large-ish period of time then we time out.
     let mut handle = Easy::new();
-    try!(handle.connect_timeout(Duration::new(30, 0)));
-    try!(handle.low_speed_limit(10 /* bytes per second */));
-    try!(handle.low_speed_time(Duration::new(30, 0)));
-    if let Some(proxy) = try!(http_proxy(config)) {
-        try!(handle.proxy(&proxy));
+    handle.connect_timeout(Duration::new(30, 0))?;
+    handle.low_speed_limit(10 /* bytes per second */)?;
+    handle.low_speed_time(Duration::new(30, 0))?;
+    if let Some(proxy) = http_proxy(config)? {
+        handle.proxy(&proxy)?;
     }
-    if let Some(cainfo) = try!(config.get_path("http.cainfo")) {
-        try!(handle.cainfo(&cainfo.val));
+    if let Some(cainfo) = config.get_path("http.cainfo")? {
+        handle.cainfo(&cainfo.val)?;
     }
-    if let Some(timeout) = try!(http_timeout(config)) {
-        try!(handle.connect_timeout(Duration::new(timeout as u64, 0)));
-        try!(handle.low_speed_time(Duration::new(timeout as u64, 0)));
+    if let Some(timeout) = http_timeout(config)? {
+        handle.connect_timeout(Duration::new(timeout as u64, 0))?;
+        handle.low_speed_time(Duration::new(timeout as u64, 0))?;
     }
     Ok(handle)
 }
@@ -240,7 +239,7 @@ pub fn http_handle(config: &Config) -> CraftResult<Easy> {
 /// Favor craft's `http.proxy`, then git's `http.proxy`. Proxies specified
 /// via environment variables are picked up by libcurl.
 fn http_proxy(config: &Config) -> CraftResult<Option<String>> {
-    match try!(config.get_string("http.proxy")) {
+    match config.get_string("http.proxy")? {
         Some(s) => return Ok(Some(s.val)),
         None => {}
     }
@@ -257,7 +256,7 @@ fn http_proxy(config: &Config) -> CraftResult<Option<String>> {
 }
 
 fn http_timeout(config: &Config) -> CraftResult<Option<i64>> {
-    match try!(config.get_i64("http.timeout")) {
+    match config.get_i64("http.timeout")? {
         Some(s) => return Ok(Some(s.val)),
         None => {}
     }

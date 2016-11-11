@@ -57,7 +57,6 @@ Some common craft commands are (see all commands with --list):
     new                 Create a new craft project (alias: n)
     run                 Build and execute src/main.c (alias: r)
     test                Run the tests (alias: t)
-    bench               Run the benchmarks
     update              Update dependencies listed in Craft.lock
 
 See 'craft help <command>' for more information on a specific command.
@@ -72,7 +71,6 @@ fn main() {
 
 macro_rules! each_subcommand{
     ($mac:ident) => {
-        $mac!(bench);
         $mac!(build);
         $mac!(clean);
         $mac!(fetch);
@@ -95,27 +93,28 @@ macro_rules! declare_mod {
 each_subcommand!(declare_mod);
 
 fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
-    try!(config.configure(flags.flag_verbose,
-                          flags.flag_quiet,
-                          &flags.flag_color,
-                          flags.flag_frozen,
-                          flags.flag_locked));
+    config.configure(flags.flag_verbose,
+                   flags.flag_quiet,
+                   &flags.flag_color,
+                   flags.flag_frozen,
+                   flags.flag_locked)?;
 
     init_git_transports(config);
     let _token = craft::util::job::setup();
 
     // Show the version if necessary
     if flags.flag_version {
-        try!(config.shell().say(craft::version(), BLACK));
+        config.shell().say(craft::version(), BLACK)?;
         return Ok(None);
     }
 
     // List available commands
     if flags.flag_list {
-        try!(config.shell().say("Available commands:", BLACK));
+        config.shell().say("Available commands:", BLACK)?;
         for command in list_commands(config) {
-            try!(config.shell().say(iter::repeat(' ').take(4).collect::<String>() + &command,
-                                    BLACK));
+            config.shell()
+                .say(iter::repeat(' ').take(4).collect::<String>() + &command,
+                     BLACK)?;
         }
         return Ok(None);
     }
@@ -161,7 +160,7 @@ fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
         return Ok(None);
     }
 
-    let alias_list = try!(aliased_command(&config, &args[1]));
+    let alias_list = aliased_command(&config, &args[1])?;
     let args = match alias_list {
         Some(alias_command) => {
             let chain = args.iter()
@@ -178,7 +177,7 @@ fn execute(flags: Flags, config: &Config) -> CliResult<Option<()>> {
         }
         None => args,
     };
-    try!(execute_subcommand(config, &args[1], &args));
+    execute_subcommand(config, &args[1], &args)?;
     Ok(None)
 }
 
@@ -213,7 +212,7 @@ fn aliased_command(config: &Config, command: &String) -> CraftResult<Option<Vec<
             }
         }
         Err(_) => {
-            let value = try!(config.get_list(&alias_name));
+            let value = config.get_list(&alias_name)?;
             if let Some(record) = value {
                 let alias_commands: Vec<String> = record.val
                     .iter()

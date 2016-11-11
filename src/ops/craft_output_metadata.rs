@@ -43,17 +43,17 @@ fn metadata_no_deps(ws: &Workspace, _opt: &OutputMetadataOptions) -> CraftResult
 }
 
 fn metadata_full(ws: &Workspace, opt: &OutputMetadataOptions) -> CraftResult<ExportInfo> {
-    let deps = try!(ops::resolve_dependencies(ws,
-                                              None,
-                                              &opt.features,
-                                              opt.all_features,
-                                              opt.no_default_features,
-                                              &[]));
+    let deps = ops::resolve_dependencies(ws,
+                                         None,
+                                         &opt.features,
+                                         opt.all_features,
+                                         opt.no_default_features,
+                                         &[])?;
     let (packages, resolve) = deps;
 
-    let packages = try!(packages.package_ids()
+    let packages = packages.package_ids()
         .map(|i| packages.get(i).map(|p| p.clone()))
-        .collect());
+        .collect()?;
 
     Ok(ExportInfo {
         packages: packages,

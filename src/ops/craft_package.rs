@@ -26,20 +26,20 @@ pub struct PackageOpts<'cfg> {
 }
 
 pub fn package(ws: &Workspace, opts: &PackageOpts) -> CraftResult<Option<FileLock>> {
-    let pkg = try!(ws.current());
+    let pkg = ws.current()?;
     let config = ws.config();
     let mut src = PathSource::new(pkg.root(), pkg.package_id().source_id(), config);
-    try!(src.update());
+    src.update()?;
 
     if opts.check_metadata {
-        try!(check_metadata(pkg, config));
+        check_metadata(pkg, config)?;
     }
 
-    try!(verify_dependencies(&pkg));
+    verify_dependencies(&pkg)?;
 
     if opts.list {
         let root = pkg.root();
-        let mut list: Vec<_> = try!(src.list_files(&pkg))
+        let mut list: Vec<_> = src.list_files(&pkg)?
             .iter()
             .map(|file| util::without_prefix(&file, &root).unwrap().to_path_buf())
             .collect();
@@ -51,33 +51,32 @@ pub fn package(ws: &Workspace, opts: &PackageOpts) -> CraftResult<Option<FileLoc
     }
 
     if !opts.allow_dirty {
-        try!(check_not_dirty(&pkg, &src));
+        check_not_dirty(&pkg, &src)?;
     }
 
     let filename = format!("{}-{}.chest", pkg.name(), pkg.version());
     let dir = ws.target_dir().join("package");
     let mut dst = {
         let tmp = format!(".{}", filename);
-        try!(dir.open_rw(&tmp, config, "package scratch space"))
+        dir.open_rw(&tmp, config, "package scratch space")?
     };
 
     // Package up and test a temporary tarball and only move it to the final
     // location if it actually passes all our tests. Any previously existing
     // tarball can be assumed as corrupt or invalid, so we just blow it away if
     // it exists.
-    try!(config.shell().status("Packaging", pkg.package_id().to_string()));
-    try!(dst.file().set_len(0));
-    try!(tar(ws, &src, dst.file(), &filename).chain_error(|| human("failed to prepare local package for uploading")));
+    config.shell().status("Packaging", pkg.package_id().to_string())?;
+    dst.file().set_len(0)?;
+    tar(ws, &src, dst.file(), &filename).chain_error(|| human("failed to prepare local package for uploading"))?;
     if opts.verify {
-        try!(dst.seek(SeekFrom::Start(0)));
-        try!(run_verify(ws, dst.file(), opts).chain_error(|| human("failed to verify package tarball")))
+        dst.seek(SeekFrom::Start(0))?;
+        run_verify(ws, dst.file(), opts).chain_error(|| human("failed to verify package tarball"))?
     }
-    try!(dst.seek(SeekFrom::Start(0)));
+    dst.seek(SeekFrom::Start(0))?;
     {
         let src_path = dst.path();
         let dst_path = dst.parent().join(&filename);
-        try!(fs::rename(&src_path, &dst_path)
-            .chain_error(|| human("failed to move temporary tarball into final location")));
+        fs::rename(&src_path, &dst_path).chain_error(|| human("failed to move temporary tarball into final location"))?;
     }
     Ok(Some(dst))
 }
@@ -111,8 +110,8 @@ fn check_metadata(pkg: &Package, config: &Config) -> CraftResult<()> {
         }
         things.push_str(&missing.last().unwrap());
 
-        try!(config.shell()
-            .warn(&format!("manifest has no {things}.", things = things)))
+        config.shell()
+            .warn(&format!("manifest has no {things}.", things = things))?
     }
     Ok(())
 }
@@ -151,7 +150,7 @@ fn check_not_dirty(p: &Package, src: &PathSource) -> CraftResult<()> {
 
     fn git(p: &Package, src: &PathSource, repo: &git2::Repository) -> CraftResult<()> {
         let workdir = repo.workdir().unwrap();
-        let dirty = try!(src.list_files(p))
+        let dirty = src.list_files(p)?
             .iter()
             .filter(|file| {
                 let relative = file.strip_prefix(workdir).unwrap();
@@ -178,22 +177,22 @@ fn tar(ws: &Workspace, src: &PathSource, dst: &File, filename: &str) -> CraftRes
     // Prepare the encoder and its header
     let filename = Path::new(filename);
     let encoder = GzBuilder::new()
-        .filename(try!(util::path2bytes(filename)))
+        .filename(util::path2bytes(filename)?)
         .write(dst, Compression::Best);
 
     // Put all package files into a compressed archive
     let mut ar = Builder::new(encoder);
-    let pkg = try!(ws.current());
+    let pkg = ws.current()?;
     let config = ws.config();
     let root = pkg.root();
-    for file in try!(src.list_files(pkg)).iter() {
+    for file in src.list_files(pkg)?.iter() {
         let relative = util::without_prefix(&file, &root).unwrap();
-        try!(check_filename(relative));
-        let relative = try!(relative.to_str()
-            .chain_error(|| human(format!("non-utf8 path in source directory: {}", relative.display()))));
-        let mut file = try!(File::open(file)
-            .chain_error(|| human(format!("failed to open for archiving: `{}`", file.display()))));
-        try!(config.shell().verbose(|shell| shell.status("Archiving", &relative)));
+        check_filename(relative)?;
+        let relative = relative.to_str()
+            .chain_error(|| human(format!("non-utf8 path in source directory: {}", relative.display())))?;
+        let mut file =
+            File::open(file).chain_error(|| human(format!("failed to open for archiving: `{}`", file.display())))?;
+        config.shell().verbose(|shell| shell.status("Archiving", &relative))?;
         let path = format!("{}-{}{}{}",
                            pkg.name(),
                            pkg.version(),
@@ -215,33 +214,33 @@ fn tar(ws: &Workspace, src: &PathSource, dst: &File, filename: &str) -> CraftRes
         // GNU archives, but for now we'll just say that you can't encode paths
         // in archives that are *too* long.
         let mut header = Header::new_ustar();
-        let metadata = try!(file.metadata()
-            .chain_error(|| human(format!("could not learn metadata for: `{}`", relative))));
-        try!(header.set_path(&path).chain_error(|| human(format!("failed to add to archive: `{}`", relative))));
+        let metadata = file.metadata()
+            .chain_error(|| human(format!("could not learn metadata for: `{}`", relative)))?;
+        header.set_path(&path).chain_error(|| human(format!("failed to add to archive: `{}`", relative)))?;
         header.set_metadata(&metadata);
         header.set_cksum();
 
-        try!(ar.append(&header, &mut file)
-            .chain_error(|| internal(format!("could not archive source file `{}`", relative))));
+        ar.append(&header, &mut file)
+            .chain_error(|| internal(format!("could not archive source file `{}`", relative)))?;
     }
-    let encoder = try!(ar.into_inner());
-    try!(encoder.finish());
+    let encoder = ar.into_inner()?;
+    encoder.finish()?;
     Ok(())
 }
 
 fn run_verify(ws: &Workspace, tar: &File, opts: &PackageOpts) -> CraftResult<()> {
     let config = ws.config();
-    let pkg = try!(ws.current());
+    let pkg = ws.current()?;
 
-    try!(config.shell().status("Verifying", pkg));
+    config.shell().status("Verifying", pkg)?;
 
-    let f = try!(GzDecoder::new(tar));
+    let f = GzDecoder::new(tar)?;
     let dst = pkg.root().join(&format!("target/package/{}-{}", pkg.name(), pkg.version()));
     if fs::metadata(&dst).is_ok() {
-        try!(fs::remove_dir_all(&dst));
+        fs::remove_dir_all(&dst)?;
     }
     let mut archive = Archive::new(f);
-    try!(archive.unpack(dst.parent().unwrap()));
+    archive.unpack(dst.parent().unwrap())?;
     let manifest_path = dst.join("Craft.toml");
 
     // When packages are uploaded to a registry, all path dependencies are
@@ -253,32 +252,32 @@ fn run_verify(ws: &Workspace, tar: &File, opts: &PackageOpts) -> CraftResult<()>
     // `SourceId` we're telling it that the corresponding `PathSource` will be
     // considered updated and we won't actually read any packages.
     let precise = Some("locked".to_string());
-    let new_src = try!(SourceId::for_path(&dst)).with_precise(precise);
-    let new_pkgid = try!(PackageId::new(pkg.name(), pkg.version(), &new_src));
+    let new_src = SourceId::for_path(&dst)?.with_precise(precise);
+    let new_pkgid = PackageId::new(pkg.name(), pkg.version(), &new_src)?;
     let new_summary = pkg.summary().clone();
     let mut new_manifest = pkg.manifest().clone();
     new_manifest.set_summary(new_summary.override_id(new_pkgid));
     let new_pkg = Package::new(new_manifest, &manifest_path);
 
     // Now that we've rewritten all our path dependencies, compile it!
-    let ws = try!(Workspace::one(new_pkg, config, None));
-    try!(ops::compile_ws(&ws,
-                         None,
-                         &ops::CompileOptions {
-                             config: config,
-                             jobs: opts.jobs,
-                             target: None,
-                             features: &[],
-                             no_default_features: false,
-                             all_features: false,
-                             spec: &[],
-                             filter: ops::CompileFilter::Everything,
-                             release: false,
-                             message_format: ops::MessageFormat::Human,
-                             mode: ops::CompileMode::Build,
-                             target_rustdoc_args: None,
-                             target_rustc_args: None,
-                         }));
+    let ws = Workspace::one(new_pkg, config, None)?;
+    ops::compile_ws(&ws,
+                    None,
+                    &ops::CompileOptions {
+                        config: config,
+                        jobs: opts.jobs,
+                        target: None,
+                        features: &[],
+                        no_default_features: false,
+                        all_features: false,
+                        spec: &[],
+                        filter: ops::CompileFilter::Everything,
+                        release: false,
+                        message_format: ops::MessageFormat::Human,
+                        mode: ops::CompileMode::Build,
+                        target_rustdoc_args: None,
+                        target_rustc_args: None,
+                    })?;
 
     Ok(())
 }

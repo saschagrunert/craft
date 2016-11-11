@@ -84,8 +84,8 @@ pub fn without_prefix<'a>(a: &'a Path, b: &'a Path) -> Option<&'a Path> {
 pub fn read(path: &Path) -> CraftResult<String> {
     (|| -> CraftResult<_> {
             let mut ret = String::new();
-            let mut f = try!(File::open(path));
-            try!(f.read_to_string(&mut ret));
+            let mut f = File::open(path)?;
+            f.read_to_string(&mut ret)?;
             Ok(ret)
         })()
         .map_err(human)
@@ -95,8 +95,8 @@ pub fn read(path: &Path) -> CraftResult<String> {
 pub fn read_bytes(path: &Path) -> CraftResult<Vec<u8>> {
     (|| -> CraftResult<_> {
             let mut ret = Vec::new();
-            let mut f = try!(File::open(path));
-            try!(f.read_to_end(&mut ret));
+            let mut f = File::open(path)?;
+            f.read_to_end(&mut ret)?;
             Ok(ret)
         })()
         .map_err(human)
@@ -105,8 +105,8 @@ pub fn read_bytes(path: &Path) -> CraftResult<Vec<u8>> {
 
 pub fn write(path: &Path, contents: &[u8]) -> CraftResult<()> {
     (|| -> CraftResult<()> {
-            let mut f = try!(File::create(path));
-            try!(f.write_all(contents));
+            let mut f = File::create(path)?;
+            f.write_all(contents)?;
             Ok(())
         })()
         .map_err(human)
@@ -115,13 +115,12 @@ pub fn write(path: &Path, contents: &[u8]) -> CraftResult<()> {
 
 pub fn append(path: &Path, contents: &[u8]) -> CraftResult<()> {
     (|| -> CraftResult<()> {
-            let mut f = try!(OpenOptions::new()
-                .write(true)
+            let mut f = OpenOptions::new().write(true)
                 .append(true)
                 .create(true)
-                .open(path));
+                .open(path)?;
 
-            try!(f.write_all(contents));
+            f.write_all(contents)?;
             Ok(())
         })
         .chain_error(|| internal(format!("failed to write `{}`", path.display())))

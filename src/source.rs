@@ -128,11 +128,11 @@ impl SourceId {
     pub fn from_url(string: &str) -> CraftResult<SourceId> {
         let mut parts = string.splitn(2, '+');
         let kind = parts.next().unwrap();
-        let url = try!(parts.next().ok_or(human(format!("invalid source `{}`", string))));
+        let url = parts.next().ok_or(human(format!("invalid source `{}`", string)))?;
 
         match kind {
             "git" => {
-                let mut url = try!(url.to_url());
+                let mut url = url.to_url()?;
                 let mut reference = GitReference::Branch("master".to_string());
                 for (k, v) in url.query_pairs() {
                     match &k[..] {
@@ -150,11 +150,11 @@ impl SourceId {
                 Ok(SourceId::for_git(&url, reference).with_precise(precise))
             }
             "registry" => {
-                let url = try!(url.to_url());
+                let url = url.to_url()?;
                 Ok(SourceId::new(Kind::Registry, url).with_precise(Some("locked".to_string())))
             }
             "path" => {
-                let url = try!(url.to_url());
+                let url = url.to_url()?;
                 Ok(SourceId::new(Kind::Path, url))
             }
             kind => Err(human(format!("unsupported source protocol: {}", kind))),
@@ -183,7 +183,7 @@ impl SourceId {
 
     // Pass absolute path
     pub fn for_path(path: &Path) -> CraftResult<SourceId> {
-        let url = try!(path.to_url());
+        let url = path.to_url()?;
         Ok(SourceId::new(Kind::Path, url))
     }
 
@@ -196,12 +196,12 @@ impl SourceId {
     }
 
     pub fn for_local_registry(path: &Path) -> CraftResult<SourceId> {
-        let url = try!(path.to_url());
+        let url = path.to_url()?;
         Ok(SourceId::new(Kind::LocalRegistry, url))
     }
 
     pub fn for_directory(path: &Path) -> CraftResult<SourceId> {
-        let url = try!(path.to_url());
+        let url = path.to_url()?;
         Ok(SourceId::new(Kind::Directory, url))
     }
 
@@ -300,7 +300,7 @@ impl Encodable for SourceId {
 
 impl Decodable for SourceId {
     fn decode<D: Decoder>(d: &mut D) -> Result<SourceId, D::Error> {
-        let string: String = try!(Decodable::decode(d));
+        let string: String = Decodable::decode(d)?;
         SourceId::from_url(&string).map_err(|e| d.error(&e.to_string()))
     }
 }
@@ -310,11 +310,11 @@ impl fmt::Display for SourceId {
         match *self.inner {
             SourceIdInner { kind: Kind::Path, ref url, .. } => fmt::Display::fmt(url, f),
             SourceIdInner { kind: Kind::Git(ref reference), ref url, ref precise, .. } => {
-                try!(write!(f, "{}{}", url, reference.url_ref()));
+                write!(f, "{}{}", url, reference.url_ref())?;
 
                 if let Some(ref s) = *precise {
                     let len = cmp::min(s.len(), 8);
-                    try!(write!(f, "#{}", &s[..len]));
+                    write!(f, "#{}", &s[..len])?;
                 }
                 Ok(())
             }

@@ -66,12 +66,12 @@ pub fn prepare<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRe
     let (work_dirty, work_fresh) = if overridden {
         (Work::new(|_| Ok(())), Work::new(|_| Ok(())))
     } else {
-        try!(build_work(cx, unit))
+        build_work(cx, unit)?
     };
 
     // Now that we've prep'd our work, build the work needed to manage the
     // fingerprint and then start returning that upwards.
-    let (freshness, dirty, fresh) = try!(fingerprint::prepare_build_cmd(cx, unit));
+    let (freshness, dirty, fresh) = fingerprint::prepare_build_cmd(cx, unit)?;
 
     Ok((work_dirty.then(dirty), work_fresh.then(fresh), freshness))
 }
@@ -91,7 +91,7 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
     // package's library profile.
     let profile = cx.lib_profile(unit.pkg.package_id());
     let to_exec = to_exec.into_os_string();
-    let mut cmd = try!(cx.compilation.host_process(to_exec, unit.pkg));
+    let mut cmd = cx.compilation.host_process(to_exec, unit.pkg)?;
     cmd.env("OUT_DIR", &build_output)
         .env("CRAFT_MANIFEST_DIR", unit.pkg.root())
         .env("NUM_JOBS", &cx.jobs().to_string())
@@ -109,8 +109,8 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
                  "debug"
              })
         .env("HOST", cx.host_triple())
-        .env("RUSTC", &try!(cx.config.rustc()).path)
-        .env("RUSTDOC", &*try!(cx.config.rustdoc()));
+        .env("RUSTC", &cx.config.rustc()?.path)
+        .env("RUSTDOC", &*cx.config.rustdoc()?);
 
     if let Some(links) = unit.pkg.manifest().links() {
         cmd.env("CRAFT_MANIFEST_LINKS", links);
@@ -158,7 +158,7 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
     // This information will be used at build-time later on to figure out which
     // sorts of variables need to be discovered at that time.
     let lib_deps = {
-        try!(cx.dep_run_custom_build(unit))
+        cx.dep_run_custom_build(unit)?
             .iter()
             .filter_map(|unit| {
                 if unit.profile.run_custom_build {
@@ -186,8 +186,8 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
     };
     cx.build_explicit_deps.insert(*unit, (output_file.clone(), rerun_if_changed));
 
-    try!(fs::create_dir_all(&cx.layout(&host_unit).build(unit.pkg)));
-    try!(fs::create_dir_all(&cx.layout(unit).build(unit.pkg)));
+    fs::create_dir_all(&cx.layout(&host_unit).build(unit.pkg))?;
+    fs::create_dir_all(&cx.layout(unit).build(unit.pkg))?;
 
     // Prepare the unit of "dirty work" which will actually run the custom build
     // command.
@@ -200,8 +200,8 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
         // If we have an old build directory, then just move it into place,
         // otherwise create it!
         if fs::metadata(&build_output).is_err() {
-            try!(fs::create_dir(&build_output)
-                .chain_error(|| internal("failed to create script output directory for build command")));
+            fs::create_dir(&build_output)
+                .chain_error(|| internal("failed to create script output directory for build command"))?;
         }
 
         // For all our native lib dependencies, pick up their metadata to pass
@@ -212,12 +212,12 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
             let build_state = build_state.outputs.lock().unwrap();
             for (name, id) in lib_deps {
                 let key = (id.clone(), kind);
-                let state = try!(build_state.get(&key).chain_error(|| {
-                    internal(format!("failed to locate build state for env \
-                                      vars: {}/{:?}",
-                                     id,
-                                     kind))
-                }));
+                let state = build_state.get(&key)
+                    .chain_error(|| {
+                        internal(format!("failed to locate build state for env vars: {}/{:?}",
+                                         id,
+                                         kind))
+                    })?;
                 let data = &state.metadata;
                 for &(ref key, ref value) in data.iter() {
                     cmd.env(&format!("DEP_{}_{}", super::envify(&name), super::envify(key)),
@@ -225,13 +225,13 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
                 }
             }
             if let Some(build_scripts) = build_scripts {
-                try!(super::add_plugin_deps(&mut cmd, &build_state, &build_scripts));
+                super::add_plugin_deps(&mut cmd, &build_state, &build_scripts)?;
             }
         }
 
         // And now finally, run the build command itself!
         state.running(&cmd);
-        let output = try!(cmd.exec_with_streaming(&mut |out_line| {
+        let output = cmd.exec_with_streaming(&mut |out_line| {
                                      state.stdout(out_line);
                                      Ok(())
                                  },
@@ -244,8 +244,8 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
                                  pkg_name,
                                  e.desc);
                 Human(e)
-            }));
-        try!(paths::write(&output_file, &output.stdout));
+            })?;
+        paths::write(&output_file, &output.stdout)?;
 
         // After the build command has finished running, we need to be sure to
         // remember all of its output so we can later discover precisely what it
@@ -254,7 +254,7 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
         // This is also the location where we provide feedback into the build
         // state informing what variables were discovered via our script as
         // well.
-        let parsed_output = try!(BuildOutput::parse(&output.stdout, &pkg_name));
+        let parsed_output = BuildOutput::parse(&output.stdout, &pkg_name)?;
         build_state.insert(id, kind, parsed_output);
         Ok(())
     });
@@ -266,7 +266,7 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
         let (id, pkg_name, build_state, output_file) = all;
         let output = match prev_output {
             Some(output) => output,
-            None => try!(BuildOutput::parse_file(&output_file, &pkg_name)),
+            None => BuildOutput::parse_file(&output_file, &pkg_name)?,
         };
         build_state.insert(id, kind, output);
         Ok(())
@@ -307,7 +307,7 @@ impl BuildState {
 
 impl BuildOutput {
     pub fn parse_file(path: &Path, pkg_name: &str) -> CraftResult<BuildOutput> {
-        let contents = try!(paths::read_bytes(path));
+        let contents = paths::read_bytes(path)?;
         BuildOutput::parse(&contents, pkg_name)
     }
 
@@ -349,7 +349,7 @@ impl BuildOutput {
 
             match key {
                 "rustc-flags" => {
-                    let (libs, links) = try!(BuildOutput::parse_rustc_flags(value, &whence));
+                    let (libs, links) = BuildOutput::parse_rustc_flags(value, &whence)?;
                     library_links.extend(links.into_iter());
                     library_paths.extend(libs.into_iter());
                 }
@@ -419,7 +419,7 @@ impl BuildOutput {
 pub fn build_map<'b, 'cfg>(cx: &mut Context<'b, 'cfg>, units: &[Unit<'b>]) -> CraftResult<()> {
     let mut ret = HashMap::new();
     for unit in units {
-        try!(build(&mut ret, cx, unit));
+        build(&mut ret, cx, unit)?;
     }
     cx.build_scripts.extend(ret.into_iter().map(|(k, v)| (k, Arc::new(v))));
     return Ok(());
@@ -441,8 +441,8 @@ pub fn build_map<'b, 'cfg>(cx: &mut Context<'b, 'cfg>, units: &[Unit<'b>]) -> Cr
         if !unit.target.is_custom_build() && unit.pkg.has_custom_build() {
             add_to_link(&mut ret, unit.pkg.package_id(), unit.kind);
         }
-        for unit in try!(cx.dep_targets(unit)).iter() {
-            let dep_scripts = try!(build(out, cx, unit));
+        for unit in cx.dep_targets(unit)?.iter() {
+            let dep_scripts = build(out, cx, unit)?;
 
             if unit.target.for_host() {
                 ret.plugins.extend(dep_scripts.to_link

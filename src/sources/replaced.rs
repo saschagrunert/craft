@@ -26,9 +26,9 @@ impl<'cfg> ReplacedSource<'cfg> {
 impl<'cfg> Registry for ReplacedSource<'cfg> {
     fn query(&mut self, dep: &Dependency) -> CraftResult<Vec<Summary>> {
         let dep = dep.clone().map_source(&self.to_replace, &self.replace_with);
-        let ret = try!(self.inner
+        let ret = self.inner
             .query(&dep)
-            .chain_error(|| human(format!("failed to query replaced source `{}`", self.to_replace))));
+            .chain_error(|| human(format!("failed to query replaced source `{}`", self.to_replace)))?;
         Ok(ret.into_iter()
             .map(|summary| summary.map_source(&self.replace_with, &self.to_replace))
             .collect())
@@ -42,9 +42,9 @@ impl<'cfg> Source for ReplacedSource<'cfg> {
 
     fn download(&mut self, id: &PackageId) -> CraftResult<Package> {
         let id = id.with_source_id(&self.replace_with);
-        let pkg = try!(self.inner
+        let pkg = self.inner
             .download(&id)
-            .chain_error(|| human(format!("failed to download replaced source `{}`", self.to_replace))));
+            .chain_error(|| human(format!("failed to download replaced source `{}`", self.to_replace)))?;
         Ok(pkg.map_source(&self.replace_with, &self.to_replace))
     }
 

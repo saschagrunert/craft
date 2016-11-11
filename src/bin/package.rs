@@ -40,14 +40,14 @@ Options:
 ";
 
 pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
-    try!(config.configure(options.flag_verbose,
+    config.configure(options.flag_verbose,
                           options.flag_quiet,
                           &options.flag_color,
                           options.flag_frozen,
-                          options.flag_locked));
-    let root = try!(find_root_manifest_for_wd(options.flag_manifest_path, config.cwd()));
-    let ws = try!(Workspace::new(&root, config));
-    try!(ops::package(&ws,
+                          options.flag_locked)?;
+    let root = find_root_manifest_for_wd(options.flag_manifest_path, config.cwd())?;
+    let ws = Workspace::new(&root, config)?;
+    ops::package(&ws,
                       &ops::PackageOpts {
                           config: config,
                           verify: !options.flag_no_verify,
@@ -55,6 +55,6 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
                           check_metadata: !options.flag_no_metadata,
                           allow_dirty: options.flag_allow_dirty,
                           jobs: options.flag_jobs,
-                      }));
+                      })?;
     Ok(None)
 }

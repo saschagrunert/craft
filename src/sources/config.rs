@@ -40,10 +40,10 @@ struct SourceConfig {
 
 impl<'cfg> SourceConfigMap<'cfg> {
     pub fn new(config: &'cfg Config) -> CraftResult<SourceConfigMap<'cfg>> {
-        let mut base = try!(SourceConfigMap::empty(config));
-        if let Some(table) = try!(config.get_table("source")) {
+        let mut base = SourceConfigMap::empty(config)?;
+        if let Some(table) = config.get_table("source")? {
             for (key, value) in table.val.iter() {
-                try!(base.add_config(key, value));
+                base.add_config(key, value)?;
             }
         }
         Ok(base)
@@ -132,35 +132,36 @@ a lock file compatible with `{orig}` cannot be generated in this situation
     }
 
     fn add_config(&mut self, name: &str, cfg: &ConfigValue) -> CraftResult<()> {
-        let (table, _path) = try!(cfg.table(&format!("source.{}", name)));
+        let (table, _path) = cfg.table(&format!("source.{}", name))?;
         let mut srcs = Vec::new();
         if let Some(val) = table.get("registry") {
-            let url = try!(url(val, &format!("source.{}.registry", name)));
+            let url = url(val, &format!("source.{}.registry", name))?;
             srcs.push(SourceId::for_registry(&url));
         }
         if let Some(val) = table.get("local-registry") {
-            let (s, path) = try!(val.string(&format!("source.{}.local-registry", name)));
+            let (s, path) = val.string(&format!("source.{}.local-registry", name))?;
             let mut path = path.to_path_buf();
             path.pop();
             path.pop();
             path.push(s);
-            srcs.push(try!(SourceId::for_local_registry(&path)));
+            srcs.push(SourceId::for_local_registry(&path)?);
         }
         if let Some(val) = table.get("directory") {
-            let (s, path) = try!(val.string(&format!("source.{}.directory", name)));
+            let (s, path) = val.string(&format!("source.{}.directory", name))?;
             let mut path = path.to_path_buf();
             path.pop();
             path.pop();
             path.push(s);
-            srcs.push(try!(SourceId::for_directory(&path)));
+            srcs.push(SourceId::for_directory(&path)?);
         }
 
         let mut srcs = srcs.into_iter();
-        let src = try!(srcs.next().chain_error(|| {
-            human(format!("no source URL specified for `source.{}`, need \
-                           either `registry` or `local-registry` defined",
-                          name))
-        }));
+        let src = srcs.next()
+            .chain_error(|| {
+                human(format!("no source URL specified for `source.{}`, need either `registry` or `local-registry` \
+                               defined",
+                              name))
+            })?;
         if srcs.next().is_some() {
             return Err(human(format!("more than one source URL specified for \
                                       `source.{}`",
@@ -169,7 +170,7 @@ a lock file compatible with `{orig}` cannot be generated in this situation
 
         let mut replace_with = None;
         if let Some(val) = table.get("replace-with") {
-            let (s, path) = try!(val.string(&format!("source.{}.replace-with", name)));
+            let (s, path) = val.string(&format!("source.{}.replace-with", name))?;
             replace_with = Some((s.to_string(), path.to_path_buf()));
         }
 
@@ -182,7 +183,7 @@ a lock file compatible with `{orig}` cannot be generated in this situation
         return Ok(());
 
         fn url(cfg: &ConfigValue, key: &str) -> CraftResult<Url> {
-            let (url, path) = try!(cfg.string(key));
+            let (url, path) = cfg.string(key)?;
             url.to_url().chain_error(|| {
                 human(format!("configuration key `{}` specified an invalid \
                                URL (in {})",

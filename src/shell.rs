@@ -170,7 +170,7 @@ impl Shell {
     fn get_term(out: Box<Write + Send>) -> CraftResult<AdequateTerminal> {
         // Check if the creation of a console will succeed
         if ::term::WinConsole::new(vec![0u8; 0]).is_ok() {
-            let t = try!(::term::WinConsole::new(out));
+            let t = ::term::WinConsole::new(out)?;
             if !t.supports_color() {
                 Ok(NoColor(Box::new(t)))
             } else {
@@ -213,13 +213,13 @@ impl Shell {
     }
 
     pub fn say<T: ToString>(&mut self, message: T, color: Color) -> CraftResult<()> {
-        try!(self.reset());
+        self.reset()?;
         if color != BLACK {
-            try!(self.fg(color));
+            self.fg(color)?;
         }
-        try!(writeln!(self, "{}", message.to_string()));
-        try!(self.reset());
-        try!(self.flush());
+        writeln!(self, "{}", message.to_string())?;
+        self.reset()?;
+        self.flush()?;
         Ok(())
     }
 
@@ -227,17 +227,17 @@ impl Shell {
         where T: fmt::Display,
               U: fmt::Display
     {
-        try!(self.reset());
+        self.reset()?;
         if color != BLACK {
-            try!(self.fg(color));
+            self.fg(color)?;
         }
         if self.supports_attr(Attr::Bold) {
-            try!(self.attr(Attr::Bold));
+            self.attr(Attr::Bold)?;
         }
-        try!(write!(self, "{}", status));
-        try!(self.reset());
-        try!(writeln!(self, " {}", message));
-        try!(self.flush());
+        write!(self, "{}", status)?;
+        self.reset()?;
+        writeln!(self, " {}", message)?;
+        self.flush()?;
         Ok(())
     }
 
@@ -245,7 +245,7 @@ impl Shell {
         let colored = self.colored();
 
         match self.terminal {
-            Colored(ref mut c) if colored => try!(c.fg(color)),
+            Colored(ref mut c) if colored => c.fg(color)?,
             _ => return Ok(false),
         }
         Ok(true)
@@ -255,7 +255,7 @@ impl Shell {
         let colored = self.colored();
 
         match self.terminal {
-            Colored(ref mut c) if colored => try!(c.attr(attr)),
+            Colored(ref mut c) if colored => c.attr(attr)?,
             _ => return Ok(false),
         }
         Ok(true)
@@ -274,7 +274,7 @@ impl Shell {
         let colored = self.colored();
 
         match self.terminal {
-            Colored(ref mut c) if colored => try!(c.reset()),
+            Colored(ref mut c) if colored => c.reset()?,
             _ => (),
         }
         Ok(())

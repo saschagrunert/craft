@@ -14,17 +14,17 @@ pub fn load_pkg_lockfile(ws: &Workspace) -> CraftResult<Option<Resolve>> {
     }
 
     let root = Filesystem::new(ws.root().to_path_buf());
-    let mut f = try!(root.open_ro("Craft.lock", ws.config(), "Craft.lock file"));
+    let mut f = root.open_ro("Craft.lock", ws.config(), "Craft.lock file")?;
 
     let mut s = String::new();
-    try!(f.read_to_string(&mut s).chain_error(|| human(format!("failed to read file: {}", f.path().display()))));
+    f.read_to_string(&mut s).chain_error(|| human(format!("failed to read file: {}", f.path().display())))?;
 
     (|| {
-            let table = try!(craft_toml::parse(&s, f.path(), ws.config()));
+            let table = craft_toml::parse(&s, f.path(), ws.config())?;
             let table = toml::Value::Table(table);
             let mut d = toml::Decoder::new(table);
-            let v: EncodableResolve = try!(Decodable::decode(&mut d));
-            Ok(Some(try!(v.into_resolve(ws))))
+            let v: EncodableResolve = Decodable::decode(&mut d)?;
+            Ok(Some(v.into_resolve(ws)?))
         })
         .chain_error(|| human(format!("failed to parse lock file at: {}", f.path().display())))
 }
@@ -35,7 +35,7 @@ pub fn write_pkg_lockfile(ws: &Workspace, resolve: &Resolve) -> CraftResult<()> 
     let orig = ws_root.open_ro("Craft.lock", ws.config(), "Craft.lock file");
     let orig = orig.and_then(|mut f| {
         let mut s = String::new();
-        try!(f.read_to_string(&mut s));
+        f.read_to_string(&mut s)?;
         Ok(s)
     });
 
@@ -107,8 +107,8 @@ pub fn write_pkg_lockfile(ws: &Workspace, resolve: &Resolve) -> CraftResult<()> 
     // Ok, if that didn't work just write it out
     ws_root.open_rw("Craft.lock", ws.config(), "Craft.lock file")
         .and_then(|mut f| {
-            try!(f.file().set_len(0));
-            try!(f.write_all(out.as_bytes()));
+            f.file().set_len(0)?;
+            f.write_all(out.as_bytes())?;
             Ok(())
         })
         .chain_error(|| human(format!("failed to write {}", ws.root().join("Craft.lock").display())))
