@@ -2,7 +2,6 @@
 pub use self::craft_clean::{clean, CleanOptions};
 pub use self::craft_compile::{CompileFilter, CompileMode, MessageFormat, compile, compile_ws, resolve_dependencies,
                               CompileOptions};
-pub use self::craft_doc::{doc, DocOptions};
 pub use self::craft_fetch::{fetch, get_resolved_packages};
 pub use self::craft_generate_lockfile::{UpdateOptions, generate_lockfile, update_lockfile};
 pub use self::craft_install::{install, install_list, uninstall};
@@ -14,13 +13,11 @@ pub use self::craft_read_manifest::{read_manifest, read_package, read_packages};
 pub use self::craft_run::run;
 pub use self::craft_rustc::{BuildOutput, BuildConfig, TargetConfig, Context, LayoutProxy, compile_targets,
                             Compilation, Layout, Kind, Unit};
-pub use self::craft_test::{run_tests, run_benches, TestOptions};
 pub use self::lockfile::{load_pkg_lockfile, write_pkg_lockfile};
 pub use self::resolve::{resolve_ws, resolve_with_previous};
 
 mod craft_clean;
 mod craft_compile;
-mod craft_doc;
 mod craft_fetch;
 mod craft_generate_lockfile;
 mod craft_install;
@@ -31,6 +28,5 @@ mod craft_pkgid;
 mod craft_read_manifest;
 mod craft_run;
 mod craft_rustc;
-mod craft_test;
 mod lockfile;
 mod resolve;
