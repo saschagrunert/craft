@@ -96,7 +96,7 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
             }
         },
         message_format: options.flag_message_format,
-        target_rustdoc_args: None,
+        target_doc_args: None,
         target_rustc_args: None,
     };
 

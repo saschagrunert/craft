@@ -12,7 +12,7 @@ use util::{self, CraftResult, Config, ProcessBuilder, process, join_paths};
 pub struct Compilation<'cfg> {
     /// All libraries which were built for a package.
     ///
-    /// This is currently used for passing --extern flags to rustdoc tests later
+    /// This is currently used for passing --extern flags to doc tests later
     /// on.
     pub libraries: HashMap<PackageId, Vec<(Target, PathBuf)>>,
 
@@ -76,8 +76,8 @@ impl<'cfg> Compilation<'cfg> {
     }
 
     /// See `process`.
-    pub fn rustdoc_process(&self, pkg: &Package) -> CraftResult<ProcessBuilder> {
-        self.fill_env(process(&*self.config.rustdoc()?), pkg, false)
+    pub fn doc_process(&self, pkg: &Package) -> CraftResult<ProcessBuilder> {
+        self.fill_env(process(&*self.config.doc()?), pkg, false)
     }
 
     /// See `process`.

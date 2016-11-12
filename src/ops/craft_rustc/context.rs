@@ -710,8 +710,8 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         env_args(self.config, &self.build_config, unit.kind, "RUSTFLAGS")
     }
 
-    pub fn rustdocflags_args(&self, unit: &Unit) -> CraftResult<Vec<String>> {
-        env_args(self.config, &self.build_config, unit.kind, "RUSTDOCFLAGS")
+    pub fn docflags_args(&self, unit: &Unit) -> CraftResult<Vec<String>> {
+        env_args(self.config, &self.build_config, unit.kind, "DOCFLAGS")
     }
 
     pub fn show_warnings(&self, pkg: &PackageId) -> bool {

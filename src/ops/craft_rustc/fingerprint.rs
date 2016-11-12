@@ -372,7 +372,7 @@ fn calculate<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftResu
     let mut deps = deps;
     deps.sort_by(|&(ref a, _), &(ref b, _)| a.cmp(b));
     let extra_flags = if unit.profile.doc {
-        cx.rustdocflags_args(unit)?
+        cx.docflags_args(unit)?
     } else {
         cx.rustflags_args(unit)?
     };

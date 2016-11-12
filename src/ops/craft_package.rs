@@ -275,7 +275,7 @@ fn run_verify(ws: &Workspace, tar: &File, opts: &PackageOpts) -> CraftResult<()>
                         release: false,
                         message_format: ops::MessageFormat::Human,
                         mode: ops::CompileMode::Build,
-                        target_rustdoc_args: None,
+                        target_doc_args: None,
                         target_rustc_args: None,
                     })?;
 

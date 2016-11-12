@@ -110,7 +110,7 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
              })
         .env("HOST", cx.host_triple())
         .env("RUSTC", &cx.config.rustc()?.path)
-        .env("RUSTDOC", &*cx.config.rustdoc()?);
+        .env("DOC", &*cx.config.doc()?);
 
     if let Some(links) = unit.pkg.manifest().links() {
         cmd.env("CRAFT_MANIFEST_LINKS", links);

@@ -203,7 +203,7 @@ fn compile<'a, 'cfg: 'a>(cx: &mut Context<'a, 'cfg>, jobs: &mut JobQueue<'a>, un
     } else {
         let (freshness, dirty, fresh) = fingerprint::prepare_target(cx, unit)?;
         let work = if unit.profile.doc {
-            rustdoc(cx, unit)?
+            doc(cx, unit)?
         } else {
             rustc(cx, unit)?
         };
@@ -429,45 +429,42 @@ fn prepare_rustc(cx: &Context, chest_types: Vec<&str>, unit: &Unit) -> CraftResu
 }
 
 
-fn rustdoc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
-    let mut rustdoc = cx.compilation.rustdoc_process(unit.pkg)?;
-    rustdoc.arg(&root_path(cx, unit))
-        .cwd(cx.config.cwd())
-        .arg("--crate-name")
-        .arg(&unit.target.chest_name());
+fn doc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
+    let mut doc = cx.compilation.doc_process(unit.pkg)?;
+    doc.arg(&root_path(cx, unit)).cwd(cx.config.cwd()).arg("--crate-name").arg(&unit.target.chest_name());
 
     if unit.kind != Kind::Host {
         if let Some(target) = cx.requested_target() {
-            rustdoc.arg("--target").arg(target);
+            doc.arg("--target").arg(target);
         }
     }
 
     let doc_dir = cx.out_dir(unit);
 
-    // Create the documentation directory ahead of time as rustdoc currently has
+    // Create the documentation directory ahead of time as doc currently has
     // a bug where concurrent invocations will race to create this directory if
     // it doesn't already exist.
     fs::create_dir_all(&doc_dir)?;
 
-    rustdoc.arg("-o").arg(doc_dir);
+    doc.arg("-o").arg(doc_dir);
 
     if let Some(features) = cx.resolve.features(unit.pkg.package_id()) {
         for feat in features {
-            rustdoc.arg("--cfg").arg(&format!("feature=\"{}\"", feat));
+            doc.arg("--cfg").arg(&format!("feature=\"{}\"", feat));
         }
     }
 
-    if let Some(ref args) = unit.profile.rustdoc_args {
-        rustdoc.args(args);
+    if let Some(ref args) = unit.profile.doc_args {
+        doc.args(args);
     }
 
-    build_deps_args(&mut rustdoc, cx, unit)?;
+    build_deps_args(&mut doc, cx, unit)?;
 
     if unit.pkg.has_custom_build() {
-        rustdoc.env("OUT_DIR", &cx.layout(unit).build_out(unit.pkg));
+        doc.env("OUT_DIR", &cx.layout(unit).build_out(unit.pkg));
     }
 
-    rustdoc.args(&cx.rustdocflags_args(unit)?);
+    doc.args(&cx.docflags_args(unit)?);
 
     let name = unit.pkg.name().to_string();
     let build_state = cx.build_state.clone();
@@ -476,11 +473,11 @@ fn rustdoc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
     Ok(Work::new(move |state| {
         if let Some(output) = build_state.outputs.lock().unwrap().get(&key) {
             for cfg in output.cfgs.iter() {
-                rustdoc.arg("--cfg").arg(cfg);
+                doc.arg("--cfg").arg(cfg);
             }
         }
-        state.running(&rustdoc);
-        rustdoc.exec().chain_error(|| human(format!("Could not document `{}`.", name)))
+        state.running(&doc);
+        doc.exec().chain_error(|| human(format!("Could not document `{}`.", name)))
     }))
 }
 
@@ -517,7 +514,7 @@ fn build_base_args(cx: &Context, cmd: &mut ProcessBuilder, unit: &Unit, chest_ty
                   doc: _doc,
                   run_custom_build,
                   ref panic,
-                  rustdoc_args: _ } = *unit.profile;
+                  doc_args: _ } = *unit.profile;
     assert!(!run_custom_build);
 
     // Move to cwd so the root_path() passed below is actually correct

@@ -73,6 +73,7 @@ macro_rules! each_subcommand{
     ($mac:ident) => {
         $mac!(build);
         $mac!(clean);
+        $mac!(doc);
         $mac!(fetch);
         $mac!(generate_lockfile);
         $mac!(git_checkout);

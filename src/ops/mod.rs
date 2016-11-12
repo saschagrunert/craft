@@ -2,6 +2,7 @@
 pub use self::craft_clean::{clean, CleanOptions};
 pub use self::craft_compile::{CompileFilter, CompileMode, MessageFormat, compile, compile_ws, resolve_dependencies,
                               CompileOptions};
+pub use self::craft_doc::{doc, DocOptions};
 pub use self::craft_fetch::{fetch, get_resolved_packages};
 pub use self::craft_generate_lockfile::{UpdateOptions, generate_lockfile, update_lockfile};
 pub use self::craft_install::{install, install_list, uninstall};
@@ -18,6 +19,7 @@ pub use self::resolve::{resolve_ws, resolve_with_previous};
 
 mod craft_clean;
 mod craft_compile;
+mod craft_doc;
 mod craft_fetch;
 mod craft_generate_lockfile;
 mod craft_install;

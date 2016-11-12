@@ -38,32 +38,44 @@ use workspace::Workspace;
 
 /// Contains information about how a package should be compiled.
 pub struct CompileOptions<'a> {
+    // The compile config
     pub config: &'a Config,
+
     /// Number of concurrent jobs to use.
     pub jobs: Option<u32>,
+
     /// The target platform to compile for (example: `i686-unknown-linux-gnu`).
     pub target: Option<&'a str>,
+
     /// Extra features to build for the root package
     pub features: &'a [String],
+
     /// Flag whether all available features should be built for the root package
     pub all_features: bool,
+
     /// Flag if the default feature should be built for the root package
     pub no_default_features: bool,
+
     /// Root package to build (if None it's the current one)
     pub spec: &'a [String],
-    /// Filter to apply to the root package to select which targets will be
-    /// built.
+
+    /// Filter to apply to the root package to select which targets will be built.
     pub filter: CompileFilter<'a>,
+
     /// Whether this is a release build or not
     pub release: bool,
+
     /// Mode for this compile.
     pub mode: CompileMode,
+
     /// `--error_format` flag for the compiler.
     pub message_format: MessageFormat,
-    /// Extra arguments to be passed to rustdoc (for main chest and dependencies)
-    pub target_rustdoc_args: Option<&'a [String]>,
-    /// The specified target will be compiled with all the available arguments,
-    /// note that this only accounts for the *final* invocation of rustc
+
+    /// Extra arguments to be passed to doc (for main chest and dependencies)
+    pub target_doc_args: Option<&'a [String]>,
+
+    /// The specified target will be compiled with all the available arguments, note that this only
+    /// accounts for the *final* invocation of rustc
     pub target_rustc_args: Option<&'a [String]>,
 }
 
@@ -165,7 +177,7 @@ pub fn compile_ws<'a>(ws: &Workspace<'a>,
                          mode,
                          message_format,
                          ref filter,
-                         ref target_rustdoc_args,
+                         ref target_doc_args,
                          ref target_rustc_args } = *options;
 
     let target = target.map(|s| s.to_string());
@@ -202,9 +214,9 @@ pub fn compile_ws<'a>(ws: &Workspace<'a>,
     let mut general_targets = Vec::new();
     let mut package_targets = Vec::new();
 
-    match (*target_rustc_args, *target_rustdoc_args) {
+    match (*target_rustc_args, *target_doc_args) {
         (Some(..), _) | (_, Some(..)) if to_builds.len() != 1 => {
-            panic!("`rustc` and `rustdoc` should not accept multiple `-p` flags")
+            panic!("`rustc` and `doc` should not accept multiple `-p` flags")
         }
         (Some(args), _) => {
             let targets = generate_targets(to_builds[0], profiles, mode, filter, release)?;
@@ -224,10 +236,10 @@ pub fn compile_ws<'a>(ws: &Workspace<'a>,
             if targets.len() == 1 {
                 let (target, profile) = targets[0];
                 let mut profile = profile.clone();
-                profile.rustdoc_args = Some(args.to_vec());
+                profile.doc_args = Some(args.to_vec());
                 general_targets.push((target, profile));
             } else {
-                bail!("extra arguments to `rustdoc` can only be passed to one \
+                bail!("extra arguments to `doc` can only be passed to one \
                        target, consider filtering\nthe package by passing e.g. \
                        `--lib` or `--bin NAME` to specify a single target")
             }

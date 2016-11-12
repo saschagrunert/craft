@@ -25,7 +25,7 @@ pub struct Config {
     rustc: LazyCell<Rustc>,
     values: LazyCell<HashMap<String, ConfigValue>>,
     cwd: PathBuf,
-    rustdoc: LazyCell<PathBuf>,
+    doc: LazyCell<PathBuf>,
     extra_verbose: Cell<bool>,
     frozen: Cell<bool>,
     locked: Cell<bool>,
@@ -39,7 +39,7 @@ impl Config {
             rustc: LazyCell::new(),
             cwd: cwd,
             values: LazyCell::new(),
-            rustdoc: LazyCell::new(),
+            doc: LazyCell::new(),
             extra_verbose: Cell::new(false),
             frozen: Cell::new(false),
             locked: Cell::new(false),
@@ -79,8 +79,8 @@ impl Config {
         self.shell.borrow_mut()
     }
 
-    pub fn rustdoc(&self) -> CraftResult<&Path> {
-        self.rustdoc.get_or_try_init(|| self.get_tool("rustdoc")).map(AsRef::as_ref)
+    pub fn doc(&self) -> CraftResult<&Path> {
+        self.doc.get_or_try_init(|| self.get_tool("doc")).map(AsRef::as_ref)
     }
 
     pub fn rustc(&self) -> CraftResult<&Rustc> {
