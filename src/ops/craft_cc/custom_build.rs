@@ -5,7 +5,7 @@ use std::str;
 use std::sync::{Mutex, Arc};
 
 use package_id::PackageId;
-use util::{CraftResult, Human, Freshness, Cfg, internal, ChainError, profile, paths};
+use util::{CraftResult, Human, Freshness, internal, ChainError, profile, paths};
 
 use super::job::Work;
 use super::{fingerprint, Kind, Context, Unit};
@@ -17,8 +17,6 @@ pub struct BuildOutput {
     pub library_paths: Vec<PathBuf>,
     /// Names and link kinds of libraries, suitable for the `-l` flag
     pub library_links: Vec<String>,
-    /// Various `--cfg` flags to pass to the compiler
-    pub cfgs: Vec<String>,
     /// Metadata to pass to the immediate dependencies
     pub metadata: Vec<(String, String)>,
     /// Glob paths to trigger a rerun of this build script.
@@ -121,34 +119,6 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
     if let Some(features) = cx.resolve.features(unit.pkg.package_id()) {
         for feat in features.iter() {
             cmd.env(&format!("CRAFT_FEATURE_{}", super::envify(feat)), "1");
-        }
-    }
-
-    let mut cfg_map = HashMap::new();
-    for cfg in cx.cfg(unit.kind) {
-        match *cfg {
-            Cfg::Name(ref n) => {
-                cfg_map.insert(n.clone(), None);
-            }
-            Cfg::KeyPair(ref k, ref v) => {
-                match *cfg_map.entry(k.clone()).or_insert(Some(Vec::new())) {
-                    Some(ref mut values) => values.push(v.clone()),
-                    None => {
-                        // ...
-                    }
-                }
-            }
-        }
-    }
-    for (k, v) in cfg_map {
-        let k = format!("CRAFT_CFG_{}", super::envify(&k));
-        match v {
-            Some(list) => {
-                cmd.env(&k, list.join(","));
-            }
-            None => {
-                cmd.env(&k, "");
-            }
         }
     }
 
@@ -316,7 +286,6 @@ impl BuildOutput {
     pub fn parse(input: &[u8], pkg_name: &str) -> CraftResult<BuildOutput> {
         let mut library_paths = Vec::new();
         let mut library_links = Vec::new();
-        let mut cfgs = Vec::new();
         let mut metadata = Vec::new();
         let mut rerun_if_changed = Vec::new();
         let mut warnings = Vec::new();
@@ -355,7 +324,6 @@ impl BuildOutput {
                 }
                 "cc-link-lib" => library_links.push(value.to_string()),
                 "cc-link-search" => library_paths.push(PathBuf::from(value)),
-                "cc-cfg" => cfgs.push(value.to_string()),
                 "warning" => warnings.push(value.to_string()),
                 "rerun-if-changed" => rerun_if_changed.push(value.to_string()),
                 _ => metadata.push((key.to_string(), value.to_string())),
@@ -365,7 +333,6 @@ impl BuildOutput {
         Ok(BuildOutput {
             library_paths: library_paths,
             library_links: library_links,
-            cfgs: cfgs,
             metadata: metadata,
             rerun_if_changed: rerun_if_changed,
             warnings: warnings,

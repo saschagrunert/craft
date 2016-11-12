@@ -9,7 +9,7 @@ use rustc_serialize::{Encoder, Encodable};
 use package_id::PackageId;
 use source::SourceId;
 use summary::Summary;
-use util::{CraftError, CraftResult, Cfg, CfgExpr, ChainError, human, Config};
+use util::{CraftError, CraftResult, CfgExpr, ChainError, human, Config};
 
 /// Information about a dependency requested by a Craft manifest. Cheap to copy.
 #[derive(PartialEq, Clone ,Debug)]
@@ -387,15 +387,10 @@ impl Dependency {
 }
 
 impl Platform {
-    pub fn matches(&self, name: &str, cfg: Option<&[Cfg]>) -> bool {
+    pub fn matches(&self, name: &str) -> bool {
         match *self {
             Platform::Name(ref p) => p == name,
-            Platform::Cfg(ref p) => {
-                match cfg {
-                    Some(cfg) => p.matches(cfg),
-                    None => false,
-                }
-            }
+            _ => false
         }
     }
 }

@@ -172,13 +172,7 @@ pub fn compile_targets<'a, 'cfg: 'a>(ws: &Workspace<'cfg>,
         }
     }
 
-    for (&(ref pkg, _), output) in cx.build_state.outputs.lock().unwrap().iter() {
-        cx.compilation
-            .cfgs
-            .entry(pkg.clone())
-            .or_insert(HashSet::new())
-            .extend(output.cfgs.iter().cloned());
-
+    for (&(_, _), output) in cx.build_state.outputs.lock().unwrap().iter() {
         for dir in output.library_paths.iter() {
             cx.compilation.native_dirs.insert(dir.clone());
         }
@@ -373,9 +367,6 @@ fn cc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
                 cc.arg("-L").arg(path);
             }
             if key.0 == *current_id {
-                for cfg in &output.cfgs {
-                    cc.arg("--cfg").arg(cfg);
-                }
                 if pass_l_flag {
                     for name in output.library_links.iter() {
                         cc.arg("-l").arg(name);
@@ -461,15 +452,7 @@ fn doc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
     doc.args(&cx.docflags_args(unit)?);
 
     let name = unit.pkg.name().to_string();
-    let build_state = cx.build_state.clone();
-    let key = (unit.pkg.package_id().clone(), unit.kind);
-
     Ok(Work::new(move |state| {
-        if let Some(output) = build_state.outputs.lock().unwrap().get(&key) {
-            for cfg in output.cfgs.iter() {
-                doc.arg("--cfg").arg(cfg);
-            }
-        }
         state.running(&doc);
         doc.exec().chain_error(|| human(format!("Could not document `{}`.", name)))
     }))

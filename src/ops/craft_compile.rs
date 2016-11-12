@@ -528,7 +528,6 @@ fn scrape_target_config(config: &Config, triple: &str) -> CraftResult<ops::Targe
         let mut output = BuildOutput {
             library_paths: Vec::new(),
             library_links: Vec::new(),
-            cfgs: Vec::new(),
             metadata: Vec::new(),
             rerun_if_changed: Vec::new(),
             warnings: Vec::new(),
@@ -551,10 +550,6 @@ fn scrape_target_config(config: &Config, triple: &str) -> CraftResult<ops::Targe
                 "cc-link-search" => {
                     let list = value.list(&k)?;
                     output.library_paths.extend(list.iter().map(|v| PathBuf::from(&v.0)));
-                }
-                "cc-cfg" => {
-                    let list = value.list(&k)?;
-                    output.cfgs.extend(list.iter().map(|v| v.0.clone()));
                 }
                 _ => {
                     let val = value.string(&k)?.0;

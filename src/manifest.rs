@@ -64,7 +64,6 @@ pub struct ManifestMetadata {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum LibKind {
     Lib,
-    Rlib,
     Dylib,
     ProcMacro,
     Other(String),
@@ -74,7 +73,6 @@ impl LibKind {
     pub fn from_str(string: &str) -> LibKind {
         match string {
             "lib" => LibKind::Lib,
-            "rlib" => LibKind::Rlib,
             "dylib" => LibKind::Dylib,
             "procc-macro" => LibKind::ProcMacro,
             s => LibKind::Other(s.to_string()),
@@ -85,7 +83,6 @@ impl LibKind {
     pub fn chest_type(&self) -> &str {
         match *self {
             LibKind::Lib => "lib",
-            LibKind::Rlib => "rlib",
             LibKind::Dylib => "dylib",
             LibKind::ProcMacro => "proc-macro",
             LibKind::Other(ref s) => s,
@@ -94,7 +91,7 @@ impl LibKind {
 
     pub fn linkable(&self) -> bool {
         match *self {
-            LibKind::Lib | LibKind::Rlib | LibKind::Dylib | LibKind::ProcMacro => true,
+            LibKind::Lib | LibKind::Dylib | LibKind::ProcMacro => true,
             LibKind::Other(..) => false,
         }
     }
@@ -439,7 +436,7 @@ impl Target {
     pub fn doctested(&self) -> bool {
         self.doctest &&
         match self.kind {
-            TargetKind::Lib(ref kinds) => kinds.contains(&LibKind::Rlib) || kinds.contains(&LibKind::Lib),
+            TargetKind::Lib(ref kinds) => kinds.contains(&LibKind::Lib),
             _ => false,
         }
     }
@@ -490,9 +487,7 @@ impl Target {
 
     pub fn can_lto(&self) -> bool {
         match self.kind {
-            TargetKind::Lib(ref v) => {
-                !v.contains(&LibKind::Rlib) && !v.contains(&LibKind::Dylib) && !v.contains(&LibKind::Lib)
-            }
+            TargetKind::Lib(ref v) => !v.contains(&LibKind::Dylib) && !v.contains(&LibKind::Lib),
             _ => true,
         }
     }

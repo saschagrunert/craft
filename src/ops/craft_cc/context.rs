@@ -1,7 +1,7 @@
 use std::collections::{HashSet, HashMap, BTreeSet};
 use std::env;
 use std::path::{Path, PathBuf};
-use std::str::{self, FromStr};
+use std::str;
 use std::sync::Arc;
 
 use dependency::Dependency;
@@ -10,7 +10,7 @@ use manifest::{Target, Profile, TargetKind, Profiles};
 use package::{Package, PackageSet};
 use package_id::{PackageId, Metadata};
 use resolver::Resolve;
-use util::{CraftResult, ChainError, internal, Config, profile, Cfg, human};
+use util::{CraftResult, ChainError, internal, Config, profile};
 use workspace::Workspace;
 
 use super::TargetConfig;
@@ -53,7 +53,6 @@ pub struct Context<'a, 'cfg: 'a> {
 #[derive(Clone, Default)]
 struct TargetInfo {
     chest_types: HashMap<String, Option<(String, String)>>,
-    cfg: Option<Vec<Cfg>>,
 }
 
 impl<'a, 'cfg> Context<'a, 'cfg> {
@@ -125,10 +124,9 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     pub fn probe_target_info(&mut self, units: &[Unit<'a>]) -> CraftResult<()> {
         let mut chest_types = BTreeSet::new();
         // pre-fill with `bin` for learning about tests (nothing may be
-        // explicitly `bin`) as well as `rlib` as it's the coalesced version of
-        // `lib` in the compiler and we're not sure which we'll see.
+        // explicitly `bin`) as well as `lib`
         chest_types.insert("bin".to_string());
-        chest_types.insert("rlib".to_string());
+        chest_types.insert("lib".to_string());
         for unit in units {
             self.visit_chest_type(unit, &mut chest_types)?;
         }
@@ -143,13 +141,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
 
     fn visit_chest_type(&self, unit: &Unit<'a>, chest_types: &mut BTreeSet<String>) -> CraftResult<()> {
         for target in unit.pkg.manifest().targets() {
-            chest_types.extend(target.cc_chest_types().iter().map(|s| {
-                if *s == "lib" {
-                    "rlib".to_string()
-                } else {
-                    s.to_string()
-                }
-            }));
+            chest_types.extend(target.cc_chest_types().iter().map(|s| s.to_string()));
         }
         for dep in self.dep_targets(&unit)? {
             self.visit_chest_type(&dep, chest_types)?;
@@ -158,70 +150,16 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     }
 
     fn probe_target_info_kind(&mut self, chest_types: &BTreeSet<String>, kind: Kind) -> CraftResult<()> {
-        let cflags = env_args(self.config, &self.build_config, kind, "CFLAGS")?;
-        let mut process = self.config.cc()?.process();
-        process.arg("-")
-            .arg("--crate-name")
-            .arg("_")
-            .arg("--print=file-names")
-            .args(&cflags)
-            .env_remove("RUST_LOG");
-
-        for chest_type in chest_types {
-            process.arg("--crate-type").arg(chest_type);
-        }
-        if kind == Kind::Target {
-            process.arg("--target").arg(&self.target_triple());
-        }
-
-        let mut with_cfg = process.clone();
-        with_cfg.arg("--print=cfg");
-
-        let mut has_cfg = true;
-        let output = with_cfg.exec_with_output()
-            .or_else(|_| {
-                has_cfg = false;
-                process.exec_with_output()
-            })
-            .chain_error(|| human(format!("failed to run `cc` to learn about target-specific information")))?;
-
-        let error = str::from_utf8(&output.stderr).unwrap();
-        let output = str::from_utf8(&output.stdout).unwrap();
-        let mut lines = output.lines();
         let mut map = HashMap::new();
         for chest_type in chest_types {
-            let not_supported = error.lines()
-                .any(|line| line.contains("unsupported chest type") && line.contains(chest_type));
-            if not_supported {
-                map.insert(chest_type.to_string(), None);
-                continue;
-            }
-            let line = match lines.next() {
-                Some(line) => line,
-                None => bail!("malformed output when learning about target-specific information from cc"),
-            };
-            let mut parts = line.trim().split('_');
-            let prefix = parts.next().unwrap();
-            let suffix = match parts.next() {
-                Some(part) => part,
-                None => bail!("output of --print=file-names has changed in the compiler, cannot parse"),
-            };
-            map.insert(chest_type.to_string(),
-                       Some((prefix.to_string(), suffix.to_string())));
+            map.insert(chest_type.to_string(), None);
         }
-
-        let cfg = if has_cfg {
-            Some(try!(lines.map(Cfg::from_str).collect()))
-        } else {
-            None
-        };
 
         let info = match kind {
             Kind::Target => &mut self.target_info,
             Kind::Host => &mut self.host_info,
         };
         info.chest_types = map;
-        info.cfg = cfg;
         Ok(())
     }
 
@@ -316,7 +254,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             // dependency, then we're likely compiling the "current package" or
             // some package in a workspace. In this situation we pass no
             // metadata by default so we'll have predictable
-            // file names like `target/debug/libfoo.{a,so,rlib}` and such.
+            // file names like `target/debug/libfoo.{a,so,lib}` and such.
             //
             // Note, though, that the compiler's build system at least wants
             // path dependencies to have hashes in filenames. To account for
@@ -365,11 +303,6 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         let mut unsupported = Vec::new();
         {
             let mut add = |chest_type: &str, linkable: bool| -> CraftResult<()> {
-                let chest_type = if chest_type == "lib" {
-                    "rlib"
-                } else {
-                    chest_type
-                };
                 match info.chest_types.get(chest_type) {
                     Some(&Some((ref prefix, ref suffix))) => {
                         ret.push((format!("{}{}{}", prefix, stem, suffix), linkable));
@@ -400,14 +333,12 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         }
         if ret.is_empty() {
             if unsupported.len() > 0 {
-                bail!("cannot produce {} for `{}` as the target `{}` \
-                       does not support these chest types",
+                bail!("cannot produce {} for `{}` as the target `{}` does not support these chest types",
                       unsupported.join(", "),
                       unit.pkg,
                       self.target_triple())
             }
-            bail!("cannot compile `{}` as the target `{}` does not \
-                   support any of the output chest types",
+            bail!("cannot compile `{}` as the target `{}` does not support any of the output chest types",
                   unit.pkg,
                   self.target_triple());
         }
@@ -647,11 +578,11 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             Some(p) => p,
             None => return true,
         };
-        let (name, info) = match kind {
+        let (name, _) = match kind {
             Kind::Host => (self.host_triple(), &self.host_info),
             Kind::Target => (self.target_triple(), &self.target_info),
         };
-        platform.matches(name, info.cfg.as_ref().map(|cfg| &cfg[..]))
+        platform.matches(name)
     }
 
     /// Gets a package for the given package id.
@@ -667,15 +598,6 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     /// Get the user-specified `ar` program for a particular host or target
     pub fn ar(&self, kind: Kind) -> Option<&Path> {
         self.target_config(kind).ar.as_ref().map(|s| s.as_ref())
-    }
-
-    /// Get the list of cfg printed out from the compiler for the specified kind
-    pub fn cfg(&self, kind: Kind) -> &[Cfg] {
-        let info = match kind {
-            Kind::Host => &self.host_info,
-            Kind::Target => &self.target_info,
-        };
-        info.cfg.as_ref().map(|s| &s[..]).unwrap_or(&[])
     }
 
     /// Get the target configuration for a particular host or target
