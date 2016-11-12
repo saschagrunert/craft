@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["WorkspaceConfig","Configuration of a workspace in a manifest."]],"struct":[["Members","An iterator over the member packages of a workspace, returned by `Workspace::members`"],["Workspace","The core abstraction in Craft for working with a workspace of chests."]]});

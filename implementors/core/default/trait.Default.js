@@ -1,0 +1,10 @@
+(function() {var implementors = {};
+implementors["craft"] = ["impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='craft/manifest/struct.Profiles.html' title='craft::manifest::Profiles'>Profiles</a>","impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='craft/manifest/struct.Profile.html' title='craft::manifest::Profile'>Profile</a>","impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='craft/ops/struct.BuildConfig.html' title='craft::ops::BuildConfig'>BuildConfig</a>","impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='craft/ops/struct.TargetConfig.html' title='craft::ops::TargetConfig'>TargetConfig</a>","impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='craft/util/toml/struct.DetailedTomlDependency.html' title='craft::util::toml::DetailedTomlDependency'>DetailedTomlDependency</a>","impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='craft/util/toml/struct.TomlProfiles.html' title='craft::util::toml::TomlProfiles'>TomlProfiles</a>","impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/default/trait.Default.html' title='core::default::Default'>Default</a> for <a class='struct' href='craft/util/toml/struct.TomlProfile.html' title='craft::util::toml::TomlProfile'>TomlProfile</a>",];
+
+            if (window.register_implementors) {
+                window.register_implementors(implementors);
+            } else {
+                window.pending_implementors = implementors;
+            }
+        
+})()

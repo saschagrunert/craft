@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["caused_human",""],["human",""],["internal",""],["internal_error",""],["process_error",""]],"struct":[["CliError",""],["CraftTestError","Error when testcases fail"],["Human",""],["ProcessError",""]],"trait":[["ChainError",""],["CraftError",""],["NetworkError",""]],"type":[["CliResult",""],["CraftResult",""]]});

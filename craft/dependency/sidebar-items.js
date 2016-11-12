@@ -1,0 +1,1 @@
+initSidebarItems({"enum":[["Kind",""],["Platform",""]],"struct":[["Dependency","Information about a dependency requested by a Craft manifest. Cheap to copy."],["DependencyInner","The data underlying a Dependency."]]});

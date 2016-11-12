@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="generator" content="rustdoc">
+    <meta name="description" content="API documentation for the Rust `Manifest` struct in crate `craft`.">
+    <meta name="keywords" content="rust, rustlang, rust-lang, Manifest">
+
+    <title>craft::manifest::Manifest - Rust</title>
+
+    <link rel="stylesheet" type="text/css" href="../../rustdoc.css">
+    <link rel="stylesheet" type="text/css" href="../../main.css">
+    
+
+    
+    
+</head>
+<body class="rustdoc">
+    <!--[if lte IE 8]>
+    <div class="warning">
+        This old browser is unsupported and will most likely display funky
+        things.
+    </div>
+    <![endif]-->
+
+    
+
+    <nav class="sidebar">
+        
+        <p class='location'><a href='../index.html'>craft</a>::<wbr><a href='index.html'>manifest</a></p><script>window.sidebarCurrent = {name: 'Manifest', ty: 'struct', relpath: ''};</script><script defer src="sidebar-items.js"></script>
+    </nav>
+
+    <nav class="sub">
+        <form class="search-form js-only">
+            <div class="search-container">
+                <input class="search-input" name="search"
+                       autocomplete="off"
+                       placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
+                       type="search">
+            </div>
+        </form>
+    </nav>
+
+    <section id='main' class="content struct">
+<h1 class='fqn'><span class='in-band'>Struct <a href='../index.html'>craft</a>::<wbr><a href='index.html'>manifest</a>::<wbr><a class='struct' href=''>Manifest</a></span><span class='out-of-band'><span id='render-detail'>
+                   <a id="toggle-all-docs" href="javascript:void(0)" title="collapse all docs">
+                       [<span class='inner'>&#x2212;</span>]
+                   </a>
+               </span><a id='src-8298' class='srclink' href='../../src/craft/src/manifest.rs.html#22-34' title='goto source code'>[src]</a></span></h1>
+<pre class='rust struct'>pub struct Manifest { /* fields omitted */ }</pre><div class='docblock'><p>Contains all the information about a package, as loaded from a Craft.toml.</p>
+</div><h2 id='methods'>Methods</h2><h3 class='impl'><span class='in-band'><code>impl <a class='struct' href='../../craft/manifest/struct.Manifest.html' title='craft::manifest::Manifest'>Manifest</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-253' class='srclink' href='../../src/craft/src/manifest.rs.html#189-287' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.new' class='method'><span id='new.v' class='invisible'><code>fn <a href='#method.new' class='fnname'>new</a>(summary: <a class='struct' href='../../craft/summary/struct.Summary.html' title='craft::summary::Summary'>Summary</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; targets: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='../../craft/manifest/struct.Target.html' title='craft::manifest::Target'>Target</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; exclude: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; include: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; links: <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;<a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; metadata: <a class='struct' href='../../craft/manifest/struct.ManifestMetadata.html' title='craft::manifest::ManifestMetadata'>ManifestMetadata</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; profiles: <a class='struct' href='../../craft/manifest/struct.Profiles.html' title='craft::manifest::Profiles'>Profiles</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; publish: <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a>,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; replace: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/vec/struct.Vec.html' title='collections::vec::Vec'>Vec</a>&lt;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='../../craft/package_id_spec/struct.PackageIdSpec.html' title='craft::package_id_spec::PackageIdSpec'>PackageIdSpec</a>, <a class='struct' href='../../craft/dependency/struct.Dependency.html' title='craft::dependency::Dependency'>Dependency</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a>&gt;,<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; workspace: <a class='enum' href='../../craft/workspace/enum.WorkspaceConfig.html' title='craft::workspace::WorkspaceConfig'>WorkspaceConfig</a>)<br>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; -&gt; <a class='struct' href='../../craft/manifest/struct.Manifest.html' title='craft::manifest::Manifest'>Manifest</a></code></span></h4>
+<h4 id='method.dependencies' class='method'><span id='dependencies.v' class='invisible'><code>fn <a href='#method.dependencies' class='fnname'>dependencies</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='struct' href='../../craft/dependency/struct.Dependency.html' title='craft::dependency::Dependency'>Dependency</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a></code></span></h4>
+<h4 id='method.exclude' class='method'><span id='exclude.v' class='invisible'><code>fn <a href='#method.exclude' class='fnname'>exclude</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a></code></span></h4>
+<h4 id='method.include' class='method'><span id='include.v' class='invisible'><code>fn <a href='#method.include' class='fnname'>include</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a></code></span></h4>
+<h4 id='method.metadata' class='method'><span id='metadata.v' class='invisible'><code>fn <a href='#method.metadata' class='fnname'>metadata</a>(&amp;self) -&gt; &amp;<a class='struct' href='../../craft/manifest/struct.ManifestMetadata.html' title='craft::manifest::ManifestMetadata'>ManifestMetadata</a></code></span></h4>
+<h4 id='method.name' class='method'><span id='name.v' class='invisible'><code>fn <a href='#method.name' class='fnname'>name</a>(&amp;self) -&gt; &amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a></code></span></h4>
+<h4 id='method.package_id' class='method'><span id='package_id.v' class='invisible'><code>fn <a href='#method.package_id' class='fnname'>package_id</a>(&amp;self) -&gt; &amp;<a class='struct' href='../../craft/package_id/struct.PackageId.html' title='craft::package_id::PackageId'>PackageId</a></code></span></h4>
+<h4 id='method.summary' class='method'><span id='summary.v' class='invisible'><code>fn <a href='#method.summary' class='fnname'>summary</a>(&amp;self) -&gt; &amp;<a class='struct' href='../../craft/summary/struct.Summary.html' title='craft::summary::Summary'>Summary</a></code></span></h4>
+<h4 id='method.targets' class='method'><span id='targets.v' class='invisible'><code>fn <a href='#method.targets' class='fnname'>targets</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='struct' href='../../craft/manifest/struct.Target.html' title='craft::manifest::Target'>Target</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a></code></span></h4>
+<h4 id='method.version' class='method'><span id='version.v' class='invisible'><code>fn <a href='#method.version' class='fnname'>version</a>(&amp;self) -&gt; &amp;Version</code></span></h4>
+<h4 id='method.warnings' class='method'><span id='warnings.v' class='invisible'><code>fn <a href='#method.warnings' class='fnname'>warnings</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a></code></span></h4>
+<h4 id='method.profiles' class='method'><span id='profiles.v' class='invisible'><code>fn <a href='#method.profiles' class='fnname'>profiles</a>(&amp;self) -&gt; &amp;<a class='struct' href='../../craft/manifest/struct.Profiles.html' title='craft::manifest::Profiles'>Profiles</a></code></span></h4>
+<h4 id='method.publish' class='method'><span id='publish.v' class='invisible'><code>fn <a href='#method.publish' class='fnname'>publish</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.bool.html'>bool</a></code></span></h4>
+<h4 id='method.replace' class='method'><span id='replace.v' class='invisible'><code>fn <a href='#method.replace' class='fnname'>replace</a>(&amp;self) -&gt; <a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>&amp;[</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>(</a><a class='struct' href='../../craft/package_id_spec/struct.PackageIdSpec.html' title='craft::package_id_spec::PackageIdSpec'>PackageIdSpec</a>, <a class='struct' href='../../craft/dependency/struct.Dependency.html' title='craft::dependency::Dependency'>Dependency</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.tuple.html'>)</a><a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.slice.html'>]</a></code></span></h4>
+<h4 id='method.links' class='method'><span id='links.v' class='invisible'><code>fn <a href='#method.links' class='fnname'>links</a>(&amp;self) -&gt; <a class='enum' href='https://doc.rust-lang.org/nightly/core/option/enum.Option.html' title='core::option::Option'>Option</a>&lt;&amp;<a class='primitive' href='https://doc.rust-lang.org/nightly/std/primitive.str.html'>str</a>&gt;</code></span></h4>
+<h4 id='method.workspace_config' class='method'><span id='workspace_config.v' class='invisible'><code>fn <a href='#method.workspace_config' class='fnname'>workspace_config</a>(&amp;self) -&gt; &amp;<a class='enum' href='../../craft/workspace/enum.WorkspaceConfig.html' title='craft::workspace::WorkspaceConfig'>WorkspaceConfig</a></code></span></h4>
+<h4 id='method.add_warning' class='method'><span id='add_warning.v' class='invisible'><code>fn <a href='#method.add_warning' class='fnname'>add_warning</a>(&amp;mut self, s: <a class='struct' href='https://doc.rust-lang.org/nightly/collections/string/struct.String.html' title='collections::string::String'>String</a>)</code></span></h4>
+<h4 id='method.set_summary' class='method'><span id='set_summary.v' class='invisible'><code>fn <a href='#method.set_summary' class='fnname'>set_summary</a>(&amp;mut self, summary: <a class='struct' href='../../craft/summary/struct.Summary.html' title='craft::summary::Summary'>Summary</a>)</code></span></h4>
+<h4 id='method.map_source' class='method'><span id='map_source.v' class='invisible'><code>fn <a href='#method.map_source' class='fnname'>map_source</a>(self, to_replace: &amp;<a class='struct' href='../../craft/source/struct.SourceId.html' title='craft::source::SourceId'>SourceId</a>, replace_with: &amp;<a class='struct' href='../../craft/source/struct.SourceId.html' title='craft::source::SourceId'>SourceId</a>) -&gt; <a class='struct' href='../../craft/manifest/struct.Manifest.html' title='craft::manifest::Manifest'>Manifest</a></code></span></h4>
+</div><h2 id='implementations'>Trait Implementations</h2><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html' title='core::clone::Clone'>Clone</a> for <a class='struct' href='../../craft/manifest/struct.Manifest.html' title='craft::manifest::Manifest'>Manifest</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-8310' class='srclink' href='../../src/craft/src/manifest.rs.html#21' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.clone' class='method'><span id='clone.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone' class='fnname'>clone</a>(&amp;self) -&gt; <a class='struct' href='../../craft/manifest/struct.Manifest.html' title='craft::manifest::Manifest'>Manifest</a></code></span></h4>
+<div class='docblock'><p>Returns a copy of the value. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#tymethod.clone">Read more</a></p>
+</div><h4 id='method.clone_from' class='method'><span id='clone_from.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from' class='fnname'>clone_from</a>(&amp;mut self, source: &amp;Self)</code><div class='since' title='Stable since Rust version 1.0.0'>1.0.0</div></span></h4>
+<div class='docblock'><p>Performs copy-assignment from <code>source</code>. <a href="https://doc.rust-lang.org/nightly/core/clone/trait.Clone.html#method.clone_from">Read more</a></p>
+</div></div><h3 class='impl'><span class='in-band'><code>impl <a class='trait' href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html' title='core::fmt::Debug'>Debug</a> for <a class='struct' href='../../craft/manifest/struct.Manifest.html' title='craft::manifest::Manifest'>Manifest</a></code></span><span class='out-of-band'><div class='ghost'></div><a id='src-8324' class='srclink' href='../../src/craft/src/manifest.rs.html#21' title='goto source code'>[src]</a></span></h3>
+<div class='impl-items'><h4 id='method.fmt' class='method'><span id='fmt.v' class='invisible'><code>fn <a href='https://doc.rust-lang.org/nightly/core/fmt/trait.Debug.html#tymethod.fmt' class='fnname'>fmt</a>(&amp;self, __arg_0: &amp;mut <a class='struct' href='https://doc.rust-lang.org/nightly/core/fmt/struct.Formatter.html' title='core::fmt::Formatter'>Formatter</a>) -&gt; <a class='type' href='https://doc.rust-lang.org/nightly/core/fmt/type.Result.html' title='core::fmt::Result'>Result</a></code></span></h4>
+<div class='docblock'><p>Formats the value using the given formatter.</p>
+</div></div></section>
+    <section id='search' class="content hidden"></section>
+
+    <section class="footer"></section>
+
+    <aside id="help" class="hidden">
+        <div>
+            <h1 class="hidden">Help</h1>
+
+            <div class="shortcuts">
+                <h2>Keyboard Shortcuts</h2>
+
+                <dl>
+                    <dt>?</dt>
+                    <dd>Show this help dialog</dd>
+                    <dt>S</dt>
+                    <dd>Focus the search field</dd>
+                    <dt>&larrb;</dt>
+                    <dd>Move up in search results</dd>
+                    <dt>&rarrb;</dt>
+                    <dd>Move down in search results</dd>
+                    <dt>&#9166;</dt>
+                    <dd>Go to active search result</dd>
+                    <dt>+</dt>
+                    <dd>Collapse/expand all sections</dd>
+                </dl>
+            </div>
+
+            <div class="infos">
+                <h2>Search Tricks</h2>
+
+                <p>
+                    Prefix searches with a type followed by a colon (e.g.
+                    <code>fn:</code>) to restrict the search to a given type.
+                </p>
+
+                <p>
+                    Accepted types are: <code>fn</code>, <code>mod</code>,
+                    <code>struct</code>, <code>enum</code>,
+                    <code>trait</code>, <code>type</code>, <code>macro</code>,
+                    and <code>const</code>.
+                </p>
+
+                <p>
+                    Search functions by type signature (e.g.
+                    <code>vec -> usize</code> or <code>* -> vec</code>)
+                </p>
+            </div>
+        </div>
+    </aside>
+
+    
+
+    <script>
+        window.rootPath = "../../";
+        window.currentCrate = "craft";
+    </script>
+    <script src="../../jquery.js"></script>
+    <script src="../../main.js"></script>
+    <script defer src="../../search-index.js"></script>
+</body>
+</html>

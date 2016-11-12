@@ -1,0 +1,1 @@
+initSidebarItems({"fn":[["http_handle","Create a new HTTP handle with appropriate global configuration for craft."]],"struct":[["RemoteRegistry",""]]});
