@@ -12,8 +12,7 @@ use util::{self, CraftResult, Config, ProcessBuilder, process, join_paths};
 pub struct Compilation<'cfg> {
     /// All libraries which were built for a package.
     ///
-    /// This is currently used for passing --extern flags to doc tests later
-    /// on.
+    /// This is currently used for passing --extern flags to doc tests later on.
     pub libraries: HashMap<PackageId, Vec<(Target, PathBuf)>>,
 
     /// An array of all tests created during this compilation.
@@ -24,8 +23,8 @@ pub struct Compilation<'cfg> {
 
     /// All directires for the output of native build commands.
     ///
-    /// This is currently used to drive some entries which are added to the
-    /// LD_LIBRARY_PATH as appropriate.
+    /// This is currently used to drive some entries which are added to the LD_LIBRARY_PATH as
+    /// appropriate.
     pub native_dirs: HashSet<PathBuf>,
 
     /// Root output directory (for the local package's artifacts)
@@ -34,12 +33,11 @@ pub struct Compilation<'cfg> {
     /// Output directory for rust dependencies
     pub deps_output: PathBuf,
 
-    /// Library search path for compiler plugins and build scripts
-    /// which have dynamic dependencies.
+    /// Library search path for compiler plugins and build scripts which have dynamic dependencies.
     pub plugins_dylib_path: PathBuf,
 
-    /// Extra environment variables that were passed to compilations and should
-    /// be passed to future invocations of programs.
+    /// Extra environment variables that were passed to compilations and should be passed to future
+    /// invocations of programs.
     pub extra_env: HashMap<PackageId, Vec<(String, String)>>,
 
     pub to_doc_test: Vec<Package>,
@@ -71,8 +69,8 @@ impl<'cfg> Compilation<'cfg> {
     }
 
     /// See `process`.
-    pub fn rustc_process(&self, pkg: &Package) -> CraftResult<ProcessBuilder> {
-        self.fill_env(self.config.rustc()?.process(), pkg, true)
+    pub fn cc_process(&self, pkg: &Package) -> CraftResult<ProcessBuilder> {
+        self.fill_env(self.config.cc()?.process(), pkg, true)
     }
 
     /// See `process`.

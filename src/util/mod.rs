@@ -13,7 +13,7 @@ pub use self::paths::{join_paths, path2bytes, bytes2path, dylib_path, normalize_
                       without_prefix};
 pub use self::process_builder::{process, ProcessBuilder};
 pub use self::read2::read2;
-pub use self::rustc::Rustc;
+pub use self::cc::Cc;
 pub use self::sha256::Sha256;
 pub use self::to_semver::ToSemver;
 pub use self::to_url::ToUrl;
@@ -39,7 +39,7 @@ mod dependency_queue;
 mod flock;
 mod lazy_cell;
 mod read2;
-mod rustc;
+mod cc;
 mod sha256;
 mod shell_escape;
 mod vcs;

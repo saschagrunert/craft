@@ -37,7 +37,7 @@ pub type Preparation = (Freshness, Work, Work);
 /// The cost was deemed high enough that fingerprints are now calculated at the
 /// layer of a target rather than a package. Each target can then be kept track
 /// of separately and only rebuilt as necessary. This requires craft to
-/// understand what the inputs are to a target, so we drive rustc with the
+/// understand what the inputs are to a target, so we drive cc with the
 /// --dep-info flag to learn about all input files to a unit of compilation.
 ///
 /// This function will calculate the fingerprint for a target and prepare the
@@ -85,7 +85,7 @@ pub fn prepare_target<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> 
         }
     }
 
-    let allow_failure = unit.profile.rustc_args.is_some();
+    let allow_failure = unit.profile.cc_args.is_some();
     let write_fingerprint = Work::new(move |_| {
         match fingerprint.update_local() {
             Ok(()) => {}
@@ -114,21 +114,21 @@ pub fn prepare_target<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> 
 /// to-be. The actual value can be calculated via `hash()`, but the operation
 /// may fail as some files may not have been generated.
 ///
-/// Note that dependencies are taken into account for fingerprints because rustc
+/// Note that dependencies are taken into account for fingerprints because cc
 /// requires that whenever an upstream chest is recompiled that all downstream
 /// dependants are also recompiled. This is typically tracked through
 /// `DependencyQueue`, but it also needs to be retained here because Craft can
 /// be interrupted while executing, losing the state of the `DependencyQueue`
 /// graph.
 pub struct Fingerprint {
-    rustc: u64,
+    cc: u64,
     features: String,
     target: u64,
     profile: u64,
     deps: Vec<(String, Arc<Fingerprint>)>,
     local: LocalFingerprint,
     memoized_hash: Mutex<Option<u64>>,
-    rustflags: Vec<String>,
+    cflags: Vec<String>,
 }
 
 #[derive(RustcEncodable, RustcDecodable, Hash)]
@@ -164,7 +164,7 @@ impl Fingerprint {
     }
 
     fn compare(&self, old: &Fingerprint) -> CraftResult<()> {
-        if self.rustc != old.rustc {
+        if self.cc != old.cc {
             bail!("rust compiler has changed")
         }
         if self.features != old.features {
@@ -178,8 +178,8 @@ impl Fingerprint {
         if self.profile != old.profile {
             bail!("profile configuration has changed")
         }
-        if self.rustflags != old.rustflags {
-            return Err(internal("RUSTFLAGS has changed"));
+        if self.cflags != old.cflags {
+            return Err(internal("CFLAGS has changed"));
         }
         match (&self.local, &old.local) {
             (&LocalFingerprint::Precalculated(ref a), &LocalFingerprint::Precalculated(ref b)) => {
@@ -225,23 +225,23 @@ impl Fingerprint {
 impl hash::Hash for Fingerprint {
     fn hash<H: Hasher>(&self, h: &mut H) {
         let Fingerprint {
-            rustc,
+            cc,
             ref features,
             target,
             profile,
             ref deps,
             ref local,
             memoized_hash: _,
-            ref rustflags,
+            ref cflags,
         } = *self;
-        (rustc, features, target, profile, deps, local, rustflags).hash(h)
+        (cc, features, target, profile, deps, local, cflags).hash(h)
     }
 }
 
 impl Encodable for Fingerprint {
     fn encode<E: Encoder>(&self, e: &mut E) -> Result<(), E::Error> {
         e.emit_struct("Fingerprint", 6, |e| {
-            e.emit_struct_field("rustc", 0, |e| self.rustc.encode(e))?;
+            e.emit_struct_field("cc", 0, |e| self.cc.encode(e))?;
             e.emit_struct_field("target", 1, |e| self.target.encode(e))?;
             e.emit_struct_field("profile", 2, |e| self.profile.encode(e))?;
             e.emit_struct_field("local", 3, |e| self.local.encode(e))?;
@@ -253,7 +253,7 @@ impl Encodable for Fingerprint {
                         .collect::<Vec<_>>()
                         .encode(e)
                 })?;
-            e.emit_struct_field("rustflags", 6, |e| self.rustflags.encode(e))?;
+            e.emit_struct_field("cflags", 6, |e| self.cflags.encode(e))?;
             Ok(())
         })
     }
@@ -266,7 +266,7 @@ impl Decodable for Fingerprint {
         }
         d.read_struct("Fingerprint", 6, |d| {
             Ok(Fingerprint {
-                rustc: d.read_struct_field("rustc", 0, decode)?,
+                cc: d.read_struct_field("cc", 0, decode)?,
                 target: d.read_struct_field("target", 1, decode)?,
                 profile: d.read_struct_field("profile", 2, decode)?,
                 local: d.read_struct_field("local", 3, decode)?,
@@ -279,19 +279,19 @@ impl Decodable for Fingerprint {
                         .map(|(name, hash)| {
                             (name,
                              Arc::new(Fingerprint {
-                                rustc: 0,
+                                cc: 0,
                                 target: 0,
                                 profile: 0,
                                 local: LocalFingerprint::Precalculated(String::new()),
                                 features: String::new(),
                                 deps: Vec::new(),
                                 memoized_hash: Mutex::new(Some(hash)),
-                                rustflags: Vec::new(),
+                                cflags: Vec::new(),
                             }))
                         })
                         .collect()
                 },
-                rustflags: d.read_struct_field("rustflags", 6, decode)?,
+                cflags: d.read_struct_field("cflags", 6, decode)?,
             })
         })
     }
@@ -374,17 +374,17 @@ fn calculate<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftResu
     let extra_flags = if unit.profile.doc {
         cx.docflags_args(unit)?
     } else {
-        cx.rustflags_args(unit)?
+        cx.cflags_args(unit)?
     };
     let fingerprint = Arc::new(Fingerprint {
-        rustc: util::hash_u64(&cx.config.rustc()?.verbose_version),
+        cc: util::hash_u64(&cx.config.cc()?.verbose_version),
         target: util::hash_u64(&unit.target),
         profile: util::hash_u64(&unit.profile),
         features: format!("{:?}", features),
         deps: deps,
         local: local,
         memoized_hash: Mutex::new(None),
-        rustflags: extra_flags,
+        cflags: extra_flags,
     });
     cx.fingerprints.insert(*unit, fingerprint.clone());
     Ok(fingerprint)
@@ -455,14 +455,14 @@ pub fn prepare_build_cmd<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) 
     };
 
     let mut fingerprint = Fingerprint {
-        rustc: 0,
+        cc: 0,
         target: 0,
         profile: 0,
         features: String::new(),
         deps: Vec::new(),
         local: local,
         memoized_hash: Mutex::new(None),
-        rustflags: Vec::new(),
+        cflags: Vec::new(),
     };
     let compare = compare_old_fingerprint(&loc, &fingerprint);
     log_compare(unit, &compare);

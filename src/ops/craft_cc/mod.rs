@@ -60,8 +60,8 @@ pub struct TargetConfig {
 
 pub type PackagesToBuild<'a> = [(&'a Package, Vec<(&'a Target, &'a Profile)>)];
 
-// Returns a mapping of the root package plus its immediate dependencies to
-// where the compiled libraries are all located.
+// Returns a mapping of the root package plus its immediate dependencies to where the compiled
+// libraries are all located.
 pub fn compile_targets<'a, 'cfg: 'a>(ws: &Workspace<'cfg>,
                                      pkg_targets: &'a PackagesToBuild<'a>,
                                      packages: &'a PackageSet<'cfg>,
@@ -205,7 +205,7 @@ fn compile<'a, 'cfg: 'a>(cx: &mut Context<'a, 'cfg>, jobs: &mut JobQueue<'a>, un
         let work = if unit.profile.doc {
             doc(cx, unit)?
         } else {
-            rustc(cx, unit)?
+            cc(cx, unit)?
         };
         let dirty = work.then(dirty);
         (dirty, fresh, freshness)
@@ -220,19 +220,15 @@ fn compile<'a, 'cfg: 'a>(cx: &mut Context<'a, 'cfg>, jobs: &mut JobQueue<'a>, un
     Ok(())
 }
 
-fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
-    let chest_types = unit.target.rustc_chest_types();
-    let mut rustc = prepare_rustc(cx, chest_types, unit)?;
+fn cc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
+    let chest_types = unit.target.cc_chest_types();
+    let mut cc = prepare_cc(cx, chest_types, unit)?;
 
     let name = unit.pkg.name().to_string();
     if !cx.show_warnings(unit.pkg.package_id()) {
-        if cx.config.rustc()?.cap_lints {
-            rustc.arg("--cap-lints").arg("allow");
-        } else {
-            rustc.arg("-Awarnings");
-        }
+        cc.arg("-Awarnings");
     }
-    let has_custom_args = unit.profile.rustc_args.is_some();
+    let has_custom_args = unit.profile.cc_args.is_some();
 
     let filenames = cx.target_filenames(unit)?;
     let root = cx.out_dir(unit);
@@ -250,7 +246,7 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
     let chest_name = unit.target.chest_name();
     let move_outputs_up = unit.pkg.package_id() == &cx.current_package;
 
-    let rustc_dep_info_loc = if do_rename {
+    let cc_dep_info_loc = if do_rename {
             root.join(&chest_name)
         } else {
             root.join(&cx.file_stem(unit))
@@ -259,7 +255,7 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
     let dep_info_loc = fingerprint::dep_info_loc(cx, unit);
     let cwd = cx.config.cwd().to_path_buf();
 
-    rustc.args(&cx.rustflags_args(unit)?);
+    cc.args(&cx.cflags_args(unit)?);
     let json_errors = cx.build_config.json_errors;
     let package_id = unit.pkg.package_id().clone();
     let target = unit.target.clone();
@@ -271,16 +267,14 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
         // located somewhere in there.
         if let Some(build_deps) = build_deps {
             let build_state = build_state.outputs.lock().unwrap();
-            add_native_deps(&mut rustc,
+            add_native_deps(&mut cc,
                             &build_state,
                             &build_deps,
                             pass_l_flag,
                             &current_id)?;
-            add_plugin_deps(&mut rustc, &build_state, &build_deps)?;
+            add_plugin_deps(&mut cc, &build_state, &build_deps)?;
         }
 
-        // FIXME(rust-lang/rust#18913): we probably shouldn't have to do
-        //                              this manually
         for &(ref filename, _linkable) in filenames.iter() {
             let dst = root.join(filename);
             if fs::metadata(&dst).is_ok() {
@@ -288,9 +282,9 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
             }
         }
 
-        state.running(&rustc);
+        state.running(&cc);
         if json_errors {
-                rustc.exec_with_streaming(&mut |line| if !line.is_empty() {
+                cc.exec_with_streaming(&mut |line| if !line.is_empty() {
                                              Err(internal(&format!("compiler stdout is not empty: `{}`", line)))
                                          } else {
                                              Ok(())
@@ -305,7 +299,7 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
                     })
                     .map(|_| ())
             } else {
-                rustc.exec()
+                cc.exec()
             }.chain_error(|| human(format!("Could not compile `{}`.", name)))?;
 
         if do_rename && real_name != chest_name {
@@ -320,9 +314,9 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
             }
         }
 
-        if !has_custom_args || fs::metadata(&rustc_dep_info_loc).is_ok() {
-            fs::rename(&rustc_dep_info_loc, &dep_info_loc)
-                .chain_error(|| internal(format!("could not rename dep info: {:?}", rustc_dep_info_loc)))?;
+        if !has_custom_args || fs::metadata(&cc_dep_info_loc).is_ok() {
+            fs::rename(&cc_dep_info_loc, &dep_info_loc)
+                .chain_error(|| internal(format!("could not rename dep info: {:?}", cc_dep_info_loc)))?;
             fingerprint::append_current_dir(&dep_info_loc, &cwd)?;
         }
 
@@ -333,7 +327,7 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
         if move_outputs_up {
             for &(ref filename, _linkable) in filenames.iter() {
                 let src = root.join(filename);
-                // This may have been a `craft rustc` command which changes the
+                // This may have been a `craft cc` command which changes the
                 // output, so the source may not actually exist.
                 if !src.exists() {
                     continue;
@@ -366,7 +360,7 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
 
     // Add all relevant -L and -l flags from dependencies (now calculated and
     // present in `state`) to the command provided
-    fn add_native_deps(rustc: &mut ProcessBuilder,
+    fn add_native_deps(cc: &mut ProcessBuilder,
                        build_state: &BuildMap,
                        build_scripts: &BuildScripts,
                        pass_l_flag: bool,
@@ -376,15 +370,15 @@ fn rustc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
             let output = build_state.get(key)
                 .chain_error(|| internal(format!("couldn't find build state for {}/{:?}", key.0, key.1)))?;
             for path in output.library_paths.iter() {
-                rustc.arg("-L").arg(path);
+                cc.arg("-L").arg(path);
             }
             if key.0 == *current_id {
                 for cfg in &output.cfgs {
-                    rustc.arg("--cfg").arg(cfg);
+                    cc.arg("--cfg").arg(cfg);
                 }
                 if pass_l_flag {
                     for name in output.library_links.iter() {
-                        rustc.arg("-l").arg(name);
+                        cc.arg("-l").arg(name);
                     }
                 }
             }
@@ -400,12 +394,12 @@ fn load_build_deps(cx: &Context, unit: &Unit) -> Option<Arc<BuildScripts>> {
 // For all plugin dependencies, add their -L paths (now calculated and
 // present in `state`) to the dynamic library load path for the command to
 // execute.
-fn add_plugin_deps(rustc: &mut ProcessBuilder,
+fn add_plugin_deps(cc: &mut ProcessBuilder,
                    build_state: &BuildMap,
                    build_scripts: &BuildScripts)
                    -> CraftResult<()> {
     let var = util::dylib_path_envvar();
-    let search_path = rustc.get_env(var).unwrap_or(OsString::new());
+    let search_path = cc.get_env(var).unwrap_or(OsString::new());
     let mut search_path = env::split_paths(&search_path).collect::<Vec<_>>();
     for id in build_scripts.plugins.iter() {
         let key = (id.clone(), Kind::Host);
@@ -416,12 +410,12 @@ fn add_plugin_deps(rustc: &mut ProcessBuilder,
         }
     }
     let search_path = join_paths(&search_path, var)?;
-    rustc.env(var, &search_path);
+    cc.env(var, &search_path);
     Ok(())
 }
 
-fn prepare_rustc(cx: &Context, chest_types: Vec<&str>, unit: &Unit) -> CraftResult<ProcessBuilder> {
-    let mut base = cx.compilation.rustc_process(unit.pkg)?;
+fn prepare_cc(cx: &Context, chest_types: Vec<&str>, unit: &Unit) -> CraftResult<ProcessBuilder> {
+    let mut base = cx.compilation.cc_process(unit.pkg)?;
     build_base_args(cx, &mut base, unit, &chest_types);
     build_plugin_args(&mut base, cx, unit);
     build_deps_args(&mut base, cx, unit)?;
@@ -481,7 +475,7 @@ fn doc(cx: &mut Context, unit: &Unit) -> CraftResult<Work> {
     }))
 }
 
-// The path that we pass to rustc is actually fairly important because it will
+// The path that we pass to cc is actually fairly important because it will
 // show up in error messages and the like. For this reason we take a few moments
 // to ensure that something shows up pretty reasonably.
 //
@@ -506,7 +500,7 @@ fn build_base_args(cx: &Context, cmd: &mut ProcessBuilder, unit: &Unit, chest_ty
     let Profile { ref opt_level,
                   lto,
                   codegen_units,
-                  ref rustc_args,
+                  ref cc_args,
                   debuginfo,
                   debug_assertions,
                   rpath,
@@ -581,7 +575,7 @@ fn build_base_args(cx: &Context, cmd: &mut ProcessBuilder, unit: &Unit, chest_ty
         cmd.arg("-g");
     }
 
-    if let Some(ref args) = *rustc_args {
+    if let Some(ref args) = *cc_args {
         cmd.args(args);
     }
 

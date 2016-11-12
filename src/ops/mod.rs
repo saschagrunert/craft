@@ -12,7 +12,7 @@ pub use self::craft_package::{package, PackageOpts};
 pub use self::craft_pkgid::pkgid;
 pub use self::craft_read_manifest::{read_manifest, read_package, read_packages};
 pub use self::craft_run::run;
-pub use self::craft_rustc::{BuildOutput, BuildConfig, TargetConfig, Context, LayoutProxy, compile_targets,
+pub use self::craft_cc::{BuildOutput, BuildConfig, TargetConfig, Context, LayoutProxy, compile_targets,
                             Compilation, Layout, Kind, Unit};
 pub use self::lockfile::{load_pkg_lockfile, write_pkg_lockfile};
 pub use self::resolve::{resolve_ws, resolve_with_previous};
@@ -29,6 +29,6 @@ mod craft_package;
 mod craft_pkgid;
 mod craft_read_manifest;
 mod craft_run;
-mod craft_rustc;
+mod craft_cc;
 mod lockfile;
 mod resolve;

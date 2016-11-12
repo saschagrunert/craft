@@ -34,7 +34,7 @@ pub fn clean(ws: &Workspace, opts: &CleanOptions) -> CraftResult<()> {
     let packages = ops::get_resolved_packages(&resolve, registry);
 
     let profiles = ws.profiles();
-    let host_triple = opts.config.rustc()?.host.clone();
+    let host_triple = opts.config.cc()?.host.clone();
     let mut cx = Context::new(ws,
                               &resolve,
                               &packages,

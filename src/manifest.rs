@@ -81,7 +81,7 @@ impl LibKind {
         }
     }
 
-    /// Returns the argument suitable for `--chest-type` to pass to rustc.
+    /// Returns the argument suitable for `--chest-type` to pass to cc.
     pub fn chest_type(&self) -> &str {
         match *self {
             LibKind::Lib => "lib",
@@ -128,8 +128,8 @@ impl Encodable for TargetKind {
 pub struct Profile {
     pub opt_level: String,
     pub lto: bool,
-    pub codegen_units: Option<u32>, // None = use rustc default
-    pub rustc_args: Option<Vec<String>>,
+    pub codegen_units: Option<u32>, // None = use cc default
+    pub cc_args: Option<Vec<String>>,
     pub doc_args: Option<Vec<String>>,
     pub debuginfo: bool,
     pub debug_assertions: bool,
@@ -478,8 +478,8 @@ impl Target {
         self.kind == TargetKind::CustomBuild
     }
 
-    /// Returns the arguments suitable for `--crate-type` to pass to rustc.
-    pub fn rustc_chest_types(&self) -> Vec<&str> {
+    /// Returns the arguments suitable for `--crate-type` to pass to cc.
+    pub fn cc_chest_types(&self) -> Vec<&str> {
         match self.kind {
             TargetKind::Lib(ref kinds) => kinds.iter().map(|kind| kind.chest_type()).collect(),
             TargetKind::CustomBuild | TargetKind::Bench | TargetKind::Test | TargetKind::Example | TargetKind::Bin => {
@@ -581,7 +581,7 @@ impl Default for Profile {
             opt_level: "0".to_string(),
             lto: false,
             codegen_units: None,
-            rustc_args: None,
+            cc_args: None,
             doc_args: None,
             debuginfo: false,
             debug_assertions: false,

@@ -1244,7 +1244,7 @@ fn build_profiles(profiles: &Option<TomlProfiles>) -> Profiles {
             opt_level: opt_level.clone().unwrap_or(TomlOptLevel(profile.opt_level)).0,
             lto: lto.unwrap_or(profile.lto),
             codegen_units: codegen_units,
-            rustc_args: None,
+            cc_args: None,
             doc_args: None,
             debuginfo: debug.unwrap_or(profile.debuginfo),
             debug_assertions: debug_assertions.unwrap_or(profile.debug_assertions),

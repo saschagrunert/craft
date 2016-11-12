@@ -15,14 +15,14 @@ use toml;
 
 use shell::{Verbosity, ColorConfig, MultiShell};
 use util::toml as craft_toml;
-use util::{CraftResult, CraftError, ChainError, Rustc, internal, human, Filesystem, LazyCell};
+use util::{CraftResult, CraftError, ChainError, Cc, internal, human, Filesystem, LazyCell};
 
 use self::ConfigValue as CV;
 
 pub struct Config {
     home_path: Filesystem,
     shell: RefCell<MultiShell>,
-    rustc: LazyCell<Rustc>,
+    cc: LazyCell<Cc>,
     values: LazyCell<HashMap<String, ConfigValue>>,
     cwd: PathBuf,
     doc: LazyCell<PathBuf>,
@@ -36,7 +36,7 @@ impl Config {
         Config {
             home_path: Filesystem::new(homedir),
             shell: RefCell::new(shell),
-            rustc: LazyCell::new(),
+            cc: LazyCell::new(),
             cwd: cwd,
             values: LazyCell::new(),
             doc: LazyCell::new(),
@@ -83,8 +83,8 @@ impl Config {
         self.doc.get_or_try_init(|| self.get_tool("doc")).map(AsRef::as_ref)
     }
 
-    pub fn rustc(&self) -> CraftResult<&Rustc> {
-        self.rustc.get_or_try_init(|| Rustc::new(self.get_tool("rustc")?))
+    pub fn cc(&self) -> CraftResult<&Cc> {
+        self.cc.get_or_try_init(|| Cc::new(self.get_tool("cc")?))
     }
 
     pub fn values(&self) -> CraftResult<&HashMap<String, ConfigValue>> {

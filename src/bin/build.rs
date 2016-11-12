@@ -94,7 +94,7 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
                                         &options.flag_bench),
         message_format: options.flag_message_format,
         target_doc_args: None,
-        target_rustc_args: None,
+        target_cc_args: None,
     };
 
     let ws = Workspace::new(&root, config)?;

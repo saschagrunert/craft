@@ -13,7 +13,7 @@ use super::{fingerprint, Kind, Context, Unit};
 /// Contains the parsed output of a custom build script.
 #[derive(Clone, Debug, Hash)]
 pub struct BuildOutput {
-    /// Paths to pass to rustc with the `-L` flag
+    /// Paths to pass to cc with the `-L` flag
     pub library_paths: Vec<PathBuf>,
     /// Names and link kinds of libraries, suitable for the `-l` flag
     pub library_links: Vec<String>,
@@ -109,7 +109,7 @@ fn build_work<'a, 'cfg>(cx: &mut Context<'a, 'cfg>, unit: &Unit<'a>) -> CraftRes
                  "debug"
              })
         .env("HOST", cx.host_triple())
-        .env("RUSTC", &cx.config.rustc()?.path)
+        .env("CC", &cx.config.cc()?.path)
         .env("DOC", &*cx.config.doc()?);
 
     if let Some(links) = unit.pkg.manifest().links() {
@@ -348,14 +348,14 @@ impl BuildOutput {
             };
 
             match key {
-                "rustc-flags" => {
-                    let (libs, links) = BuildOutput::parse_rustc_flags(value, &whence)?;
+                "cc-flags" => {
+                    let (libs, links) = BuildOutput::parse_cc_flags(value, &whence)?;
                     library_links.extend(links.into_iter());
                     library_paths.extend(libs.into_iter());
                 }
-                "rustc-link-lib" => library_links.push(value.to_string()),
-                "rustc-link-search" => library_paths.push(PathBuf::from(value)),
-                "rustc-cfg" => cfgs.push(value.to_string()),
+                "cc-link-lib" => library_links.push(value.to_string()),
+                "cc-link-search" => library_paths.push(PathBuf::from(value)),
+                "cc-cfg" => cfgs.push(value.to_string()),
                 "warning" => warnings.push(value.to_string()),
                 "rerun-if-changed" => rerun_if_changed.push(value.to_string()),
                 _ => metadata.push((key.to_string(), value.to_string())),
@@ -372,7 +372,7 @@ impl BuildOutput {
         })
     }
 
-    pub fn parse_rustc_flags(value: &str, whence: &str) -> CraftResult<(Vec<PathBuf>, Vec<String>)> {
+    pub fn parse_cc_flags(value: &str, whence: &str) -> CraftResult<(Vec<PathBuf>, Vec<String>)> {
         let value = value.trim();
         let mut flags_iter = value.split(|c: char| c.is_whitespace())
             .filter(|w| w.chars().any(|c| !c.is_whitespace()));
@@ -390,7 +390,7 @@ impl BuildOutput {
             let value = match flags_iter.next() {
                 Some(v) => v,
                 None => {
-                    bail!("Flag in rustc-flags has no value in {}: `{}`",
+                    bail!("Flag in cc-flags has no value in {}: `{}`",
                           whence,
                           value)
                 }

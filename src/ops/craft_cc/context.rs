@@ -143,7 +143,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
 
     fn visit_chest_type(&self, unit: &Unit<'a>, chest_types: &mut BTreeSet<String>) -> CraftResult<()> {
         for target in unit.pkg.manifest().targets() {
-            chest_types.extend(target.rustc_chest_types().iter().map(|s| {
+            chest_types.extend(target.cc_chest_types().iter().map(|s| {
                 if *s == "lib" {
                     "rlib".to_string()
                 } else {
@@ -158,13 +158,13 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
     }
 
     fn probe_target_info_kind(&mut self, chest_types: &BTreeSet<String>, kind: Kind) -> CraftResult<()> {
-        let rustflags = env_args(self.config, &self.build_config, kind, "RUSTFLAGS")?;
-        let mut process = self.config.rustc()?.process();
+        let cflags = env_args(self.config, &self.build_config, kind, "CFLAGS")?;
+        let mut process = self.config.cc()?.process();
         process.arg("-")
             .arg("--crate-name")
             .arg("_")
             .arg("--print=file-names")
-            .args(&rustflags)
+            .args(&cflags)
             .env_remove("RUST_LOG");
 
         for chest_type in chest_types {
@@ -183,7 +183,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
                 has_cfg = false;
                 process.exec_with_output()
             })
-            .chain_error(|| human(format!("failed to run `rustc` to learn about target-specific information")))?;
+            .chain_error(|| human(format!("failed to run `cc` to learn about target-specific information")))?;
 
         let error = str::from_utf8(&output.stderr).unwrap();
         let output = str::from_utf8(&output.stdout).unwrap();
@@ -198,7 +198,7 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
             }
             let line = match lines.next() {
                 Some(line) => line,
-                None => bail!("malformed output when learning about target-specific information from rustc"),
+                None => bail!("malformed output when learning about target-specific information from cc"),
             };
             let mut parts = line.trim().split('_');
             let prefix = parts.next().unwrap();
@@ -706,8 +706,8 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
         self.lib_profile(pkg)
     }
 
-    pub fn rustflags_args(&self, unit: &Unit) -> CraftResult<Vec<String>> {
-        env_args(self.config, &self.build_config, unit.kind, "RUSTFLAGS")
+    pub fn cflags_args(&self, unit: &Unit) -> CraftResult<Vec<String>> {
+        env_args(self.config, &self.build_config, unit.kind, "CFLAGS")
     }
 
     pub fn docflags_args(&self, unit: &Unit) -> CraftResult<Vec<String>> {
@@ -720,38 +720,38 @@ impl<'a, 'cfg> Context<'a, 'cfg> {
 }
 
 // Acquire extra flags to pass to the compiler from the
-// RUSTFLAGS environment variable and similar config values
+// CFLAGS environment variable and similar config values
 fn env_args(config: &Config, build_config: &BuildConfig, kind: Kind, name: &str) -> CraftResult<Vec<String>> {
-    // We *want* to apply RUSTFLAGS only to builds for the
+    // We *want* to apply CFLAGS only to builds for the
     // requested target architecture, and not to things like build
     // scripts and plugins, which may be for an entirely different
     // architecture. Craft's present architecture makes it quite
     // hard to only apply flags to things that are not build
     // scripts and plugins though, so we do something more hacky
-    // instead to avoid applying the same RUSTFLAGS to multiple targets
+    // instead to avoid applying the same CFLAGS to multiple targets
     // arches:
     //
-    // 1) If --target is not specified we just apply RUSTFLAGS to
+    // 1) If --target is not specified we just apply CFLAGS to
     // all builds; they are all going to have the same target.
     //
-    // 2) If --target *is* specified then we only apply RUSTFLAGS
+    // 2) If --target *is* specified then we only apply CFLAGS
     // to compilation units with the Target kind, which indicates
     // it was chosen by the --target flag.
     //
     // This means that, e.g. even if the specified --target is the
     // same as the host, build scripts in plugins won't get
-    // RUSTFLAGS.
+    // CFLAGS.
     let compiling_with_target = build_config.requested_target.is_some();
     let is_target_kind = kind == Kind::Target;
 
     if compiling_with_target && !is_target_kind {
         // This is probably a build script or plugin and we're
         // compiling with --target. In this scenario there are
-        // no rustflags we can apply.
+        // no cflags we can apply.
         return Ok(Vec::new());
     }
 
-    // First try RUSTFLAGS from the environment
+    // First try CFLAGS from the environment
     if let Some(a) = env::var(name).ok() {
         let args = a.split(" ")
             .map(str::trim)
@@ -761,7 +761,7 @@ fn env_args(config: &Config, build_config: &BuildConfig, kind: Kind, name: &str)
     }
 
     let name = name.chars().flat_map(|c| c.to_lowercase()).collect::<String>();
-    // Then the target.*.rustflags value
+    // Then the target.*.cflags value
     let target = build_config.requested_target.as_ref().unwrap_or(&build_config.host_triple);
     let key = format!("target.{}.{}", target, name);
     if let Some(args) = config.get_list(&key)? {
@@ -769,7 +769,7 @@ fn env_args(config: &Config, build_config: &BuildConfig, kind: Kind, name: &str)
         return Ok(args.collect());
     }
 
-    // Then the build.rustflags value
+    // Then the build.cflags value
     let key = format!("build.{}", name);
     if let Some(args) = config.get_list(&key)? {
         let args = args.val.into_iter().map(|a| a.0);

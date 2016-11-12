@@ -85,7 +85,7 @@ pub fn execute(options: Options, config: &Config) -> CliResult<Option<()>> {
             message_format: options.flag_message_format,
             release: options.flag_release,
             mode: ops::CompileMode::Doc { deps: !options.flag_no_deps },
-            target_rustc_args: None,
+            target_cc_args: None,
             target_doc_args: None,
         },
     };

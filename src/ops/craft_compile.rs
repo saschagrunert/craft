@@ -12,8 +12,8 @@
 //!
 //! 3. Shell out to `--do download` for each source
 //! 4. Shell out to `--do get` for each source, and build up the list of paths
-//!    to pass to rustc -L
-//! 5. Call `craft-rustc` with the results of the resolver zipped together with
+//!    to pass to cc -L
+//! 5. Call `craft-cc` with the results of the resolver zipped together with
 //!    the results of the `get`
 //!
 //!    a. Topologically sort the dependencies
@@ -75,8 +75,8 @@ pub struct CompileOptions<'a> {
     pub target_doc_args: Option<&'a [String]>,
 
     /// The specified target will be compiled with all the available arguments, note that this only
-    /// accounts for the *final* invocation of rustc
-    pub target_rustc_args: Option<&'a [String]>,
+    /// accounts for the *final* invocation of cc
+    pub target_cc_args: Option<&'a [String]>,
 }
 
 #[derive(Clone, Copy, PartialEq)]
@@ -178,7 +178,7 @@ pub fn compile_ws<'a>(ws: &Workspace<'a>,
                          message_format,
                          ref filter,
                          ref target_doc_args,
-                         ref target_rustc_args } = *options;
+                         ref target_cc_args } = *options;
 
     let target = target.map(|s| s.to_string());
 
@@ -214,19 +214,19 @@ pub fn compile_ws<'a>(ws: &Workspace<'a>,
     let mut general_targets = Vec::new();
     let mut package_targets = Vec::new();
 
-    match (*target_rustc_args, *target_doc_args) {
+    match (*target_cc_args, *target_doc_args) {
         (Some(..), _) | (_, Some(..)) if to_builds.len() != 1 => {
-            panic!("`rustc` and `doc` should not accept multiple `-p` flags")
+            panic!("`cc` and `doc` should not accept multiple `-p` flags")
         }
         (Some(args), _) => {
             let targets = generate_targets(to_builds[0], profiles, mode, filter, release)?;
             if targets.len() == 1 {
                 let (target, profile) = targets[0];
                 let mut profile = profile.clone();
-                profile.rustc_args = Some(args.to_vec());
+                profile.cc_args = Some(args.to_vec());
                 general_targets.push((target, profile));
             } else {
-                bail!("extra arguments to `rustc` can only be passed to one \
+                bail!("extra arguments to `cc` can only be passed to one \
                        target, consider filtering\nthe package by passing \
                        e.g. `--lib` or `--bin NAME` to specify a single target")
             }
@@ -495,7 +495,7 @@ fn scrape_build_config(config: &Config, jobs: Option<u32>, target: Option<String
     let cfg_target = config.get_string("build.target")?.map(|s| s.val);
     let target = target.or(cfg_target);
     let mut base = ops::BuildConfig {
-        host_triple: config.rustc()?.host.clone(),
+        host_triple: config.cc()?.host.clone(),
         requested_target: target.clone(),
         jobs: jobs,
         ..Default::default()
@@ -521,7 +521,7 @@ fn scrape_target_config(config: &Config, triple: &str) -> CraftResult<ops::Targe
         None => return Ok(ret),
     };
     for (lib_name, value) in table {
-        if lib_name == "ar" || lib_name == "linker" || lib_name == "rustflags" {
+        if lib_name == "ar" || lib_name == "linker" || lib_name == "cflags" {
             continue;
         }
 
@@ -536,23 +536,23 @@ fn scrape_target_config(config: &Config, triple: &str) -> CraftResult<ops::Targe
         for (k, value) in value.table(&lib_name)?.0 {
             let key = format!("{}.{}", key, k);
             match &k[..] {
-                "rustc-flags" => {
+                "cc-flags" => {
                     let (flags, definition) = value.string(&k)?;
                     let whence = format!("in `{}` (in {})", key, definition.display());
-                    let (paths, links) = BuildOutput::parse_rustc_flags(&flags, &whence)?;
+                    let (paths, links) = BuildOutput::parse_cc_flags(&flags, &whence)?;
                     output.library_paths.extend(paths);
                     output.library_links.extend(links);
                 }
-                "rustc-link-lib" => {
+                "cc-link-lib" => {
                     let list = value.list(&k)?;
                     output.library_links.extend(list.iter()
                         .map(|v| v.0.clone()));
                 }
-                "rustc-link-search" => {
+                "cc-link-search" => {
                     let list = value.list(&k)?;
                     output.library_paths.extend(list.iter().map(|v| PathBuf::from(&v.0)));
                 }
-                "rustc-cfg" => {
+                "cc-cfg" => {
                     let list = value.list(&k)?;
                     output.cfgs.extend(list.iter().map(|v| v.0.clone()));
                 }

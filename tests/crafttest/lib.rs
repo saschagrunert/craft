@@ -22,7 +22,7 @@ extern crate winapi;
 #[macro_use]
 extern crate log;
 
-use craft::util::Rustc;
+use craft::util::Cc;
 use std::ffi::OsStr;
 use std::time::Duration;
 use std::path::PathBuf;
@@ -31,14 +31,14 @@ use std::env;
 pub mod support;
 pub mod install;
 
-thread_local!(pub static RUSTC: Rustc = Rustc::new(PathBuf::from("rustc")).unwrap());
+thread_local!(pub static CC: Cc = Cc::new(PathBuf::from("cc")).unwrap());
 
-pub fn rustc_host() -> String {
-    RUSTC.with(|r| r.host.clone())
+pub fn cc_host() -> String {
+    CC.with(|r| r.host.clone())
 }
 
 pub fn is_nightly() -> bool {
-    RUSTC.with(|r| r.verbose_version.contains("-nightly") || r.verbose_version.contains("-dev"))
+    CC.with(|r| r.verbose_version.contains("-nightly") || r.verbose_version.contains("-dev"))
 }
 
 pub fn process<T: AsRef<OsStr>>(t: T) -> craft::util::ProcessBuilder {
@@ -51,7 +51,7 @@ fn _process(t: &OsStr) -> craft::util::ProcessBuilder {
      .env_remove("CRAFT_HOME")
      .env("HOME", support::paths::home())
      .env("CRAFT_HOME", support::paths::home().join(".craft"))
-     .env_remove("RUSTC")
+     .env_remove("CC")
      .env_remove("RUSTFLAGS")
      .env_remove("XDG_CONFIG_HOME")      // see #2345
      .env("GIT_CONFIG_NOSYSTEM", "1")    // keep trying to sandbox ourselves
@@ -59,7 +59,7 @@ fn _process(t: &OsStr) -> craft::util::ProcessBuilder {
      .env_remove("MSYSTEM");             // assume cmd.exe everywhere on windows
 
     // We'll need dynamic libraries at some point in this test suite, so ensure
-    // that the rustc libdir is somewhere in LD_LIBRARY_PATH as appropriate.
+    // that the cc libdir is somewhere in LD_LIBRARY_PATH as appropriate.
     // Note that this isn't needed on Windows as we assume the bindir (with
     // dlls) is in PATH.
     if cfg!(unix) {
@@ -68,13 +68,13 @@ fn _process(t: &OsStr) -> craft::util::ProcessBuilder {
         } else {
             "LD_LIBRARY_PATH"
         };
-        let rustc = RUSTC.with(|r| r.path.clone());
+        let cc = CC.with(|r| r.path.clone());
         let path = env::var_os("PATH").unwrap_or(Default::default());
-        let rustc = env::split_paths(&path)
-            .map(|p| p.join(&rustc))
+        let cc = env::split_paths(&path)
+            .map(|p| p.join(&cc))
             .find(|p| p.exists())
             .unwrap();
-        let mut libdir = rustc.clone();
+        let mut libdir = cc.clone();
         libdir.pop();
         libdir.pop();
         libdir.push("lib");
